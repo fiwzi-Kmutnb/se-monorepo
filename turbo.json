@@ -17,8 +17,8 @@
       "cache": false,
       "persistent": true
     },
-    "prisma": {
-      "dependsOn": ["^prisma"]
+    "dbpush": {
+      "dependsOn": ["^dbpush"]
     }
   }
 }
