@@ -17,7 +17,8 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
     global: true,
     secret: process.env.JWT_SECRET,
     signOptions: { expiresIn: '1d' },
-  })],
+  }),
+],
   controllers: [AppController],
   providers: [AppService,
     {
