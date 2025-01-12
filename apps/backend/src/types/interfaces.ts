@@ -1,8 +1,7 @@
-
-export interface Response<T> {
-    statusCode?: number | undefined;
-    message: string;
-    data: T | null;
-    type: "SUCCESS" | "ERROR" |"WARNING" | "WAIT";
-    timestamp: string;
-  }
+export interface Response {
+  statusCode?: number | undefined;
+  message: string;
+  data?: null | object;
+  type: 'SUCCESS' | 'ERROR' | 'WARNING' | 'WAIT';
+  timestamp: string;
+}

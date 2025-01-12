@@ -7,29 +7,38 @@ import { TransformInterceptor } from '@se/custominterceptor';
 import { AllExceptionsFilter } from '@se/customfilter';
 import { ZodValidationPipe } from '@se/custompipe';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { AuthModule } from './api/v1/auth/auth.module';
+import { PrismaModule } from '@se/prisma';
 
 @Module({
-  imports: [ConfigModule.forRoot({
-    isGlobal: true,
-    envFilePath: '.env',
-  }),
-  JwtModule.register({
-    global: true,
-    secret: process.env.JWT_SECRET,
-    signOptions: { expiresIn: '1d' },
-  })],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1d' },
+    }),
+    AuthModule,
+    PrismaModule,
+  ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     {
       provide: APP_PIPE,
-      useClass: ZodValidationPipe
-    },{
+      useClass: ZodValidationPipe,
+    },
+    {
       provide: APP_FILTER,
-      useClass: AllExceptionsFilter
-    },{
+      useClass: AllExceptionsFilter,
+    },
+    {
       provide: APP_INTERCEPTOR,
-      useClass: TransformInterceptor
-    }
+      useClass: TransformInterceptor,
+    },
   ],
 })
 export class AppModule {}
