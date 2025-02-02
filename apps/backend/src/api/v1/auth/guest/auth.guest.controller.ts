@@ -1,16 +1,33 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post, Put } from '@nestjs/common';
 import { AuthGuestService } from './auth.guest.service';
-import { LoginDTO } from './auth.guest.dto';
+import {
+  LoginDTO,
+  ForgotDTO,
+  ForgotConfirmPasswordDTO,
+  ForgotVerifyDTO,
+} from './auth.guest.dto';
 
 @Controller('v1/guest/auth')
 export class AuthGuestController {
   constructor(private readonly Authservice: AuthGuestService) {}
 
-  // @Get('forgotpassword')
-  // async forgotpasswordController(@Body() body: { email: string }) {
-  //   return this.Authservice.ForgotPassword(body.email);
-  // }
+  @Post('forgotpassword')
+  async forgotpasswordController(@Body() body: ForgotDTO) {
+    return this.Authservice.ForgotPassword(body);
+  }
 
+  @Post('forgotpassword/:token')
+  async forgotpasswordverifyController(@Param() token: ForgotVerifyDTO) {
+    return this.Authservice.ForgotPasswordVerify(token);
+  }
+
+  @Put('forgotpassword/:token')
+  async forgotpasswordconfirmController(
+    @Body() body: ForgotConfirmPasswordDTO,
+    @Param() token: ForgotVerifyDTO,
+  ) {
+    return this.Authservice.ForgotConfirmPassword(body, token);
+  }
   @Post('login')
   async loginController(
     @Body()

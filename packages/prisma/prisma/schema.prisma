@@ -27,33 +27,79 @@ enum Status {
 }
 
 model users {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  firstname String
-  lastname  String
-  password  String
-  username  String
-  role      Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Order     Order[]
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  profile_img String
+  firstname   String
+  lastname    String
+  password    String
+  username    String
+  role        Role
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Order       order[]
+  cart        cart[]
+  emailTokens emailTokens[]
 }
 
-model Order {
-  id        Int      @id @default(autoincrement())
-  user      users    @relation(fields: [userId], references: [id])
-  userId    Int
-  product   Product  @relation(fields: [productId], references: [id])
-  productId Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model order {
+  id              Int      @id @default(autoincrement())
+  status          Status
+  Customer        customer @relation(fields: [customer_Lineid], references: [UserID])
+  customer_Lineid String
+  user            users    @relation(fields: [userId], references: [id])
+  userId          Int
+  product         product  @relation(fields: [productId], references: [id])
+  productId       Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
-model Product {
+model product {
   id        Int      @id @default(autoincrement())
   name      String
   price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Order     Order[]
+  cart      cart[]
+  order     order[]
+}
+
+model cart {
+  id              Int      @id @default(autoincrement())
+  user            users    @relation(fields: [userId], references: [id])
+  userId          Int
+  Customer        customer @relation(fields: [customer_Lineid], references: [UserID])
+  customer_Lineid String
+  product         product  @relation(fields: [productId], references: [id])
+  productId       Int
+  price           Float
+  quantity        Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model customer {
+  UserID String  @unique
+  Type   String
+  Order  order[]
+  cart   cart[]
+}
+
+enum statusEmailTokens {
+  PENDING
+  VERIFIED
+  SUCCESS
+  EXPIRED
+  ERROR
+}
+
+model emailTokens {
+  id        Int               @id @default(autoincrement())
+  user      users             @relation(fields: [userId], references: [id])
+  userId    Int
+  token     String
+  status    statusEmailTokens @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 }
