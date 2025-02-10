@@ -9,6 +9,8 @@ import { ZodValidationPipe } from '@se/custompipe';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AuthModule } from './api/v1/auth/auth.module';
 import { PrismaModule } from '@se/prisma';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { StockModule } from './api/v1/stock/stock.module';
 
 @Module({
   imports: [
@@ -21,8 +23,23 @@ import { PrismaModule } from '@se/prisma';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1d' },
     }),
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.MAIL_HOST,
+        port: Number(process.env.MAIL_PORT),
+        // ignoreTLS: true,
+        secure: false,
+        tls: { rejectUnauthorized: false },
+        auth: {
+          user: process.env.MAIL_USER,
+          pass: process.env.MAIL_PASSWORD,
+        },
+      },
+      defaults: {},
+    }),
     AuthModule,
     PrismaModule,
+    StockModule,
   ],
   controllers: [AppController],
   providers: [

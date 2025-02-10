@@ -14,79 +14,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  OWNER
-  MEMBER
-  RIDER
-}
-
-enum Status {
+enum StatusOrder {
   PENDING
   ACCEPTED
   REJECTED
+  CANCELLED
+  DELIVERING
+  SUCCESS
+  ERROR
 }
 
-model users {
-  id          Int           @id @default(autoincrement())
-  email       String        @unique
-  profile_img String
-  firstname   String
-  lastname    String
-  password    String
-  username    String
-  role        Role
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  Order       order[]
-  cart        cart[]
-  emailTokens emailTokens[]
-}
-
-model order {
-  id              Int      @id @default(autoincrement())
-  status          Status
-  Customer        customer @relation(fields: [customer_Lineid], references: [UserID])
-  customer_Lineid String
-  user            users    @relation(fields: [userId], references: [id])
-  userId          Int
-  product         product  @relation(fields: [productId], references: [id])
-  productId       Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model product {
-  id        Int      @id @default(autoincrement())
-  name      String
-  price     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  cart      cart[]
-  order     order[]
-}
-
-model cart {
-  id              Int      @id @default(autoincrement())
-  user            users    @relation(fields: [userId], references: [id])
-  userId          Int
-  Customer        customer @relation(fields: [customer_Lineid], references: [UserID])
-  customer_Lineid String
-  product         product  @relation(fields: [productId], references: [id])
-  productId       Int
-  price           Float
-  quantity        Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model customer {
-  UserID String  @unique
-  Type   String
-  Order  order[]
-  cart   cart[]
-}
-
-enum statusEmailTokens {
+enum StatusEmailTokens {
   PENDING
   VERIFIED
   SUCCESS
@@ -94,12 +32,208 @@ enum statusEmailTokens {
   ERROR
 }
 
+enum StatusDeliveryTokens {
+  PENDING
+  DELIVERING
+  DELIVERED
+  REJECTED
+  ERROR
+}
+
+enum StatusPayment {
+  FAILED
+  SUCCESS
+  ERROR
+}
+
+enum TypePayment {
+  QRCODE_CHECK
+}
+
+enum ActionStock {
+  EDIT
+  INCREASE
+  DECREASE
+  CREATE
+  DELETE
+  ENABLE
+  DISABLE
+}
+
+enum ActionLogin {
+  Login
+  FORGOTPASSWORD
+}
+
+enum StatusLogin {
+  PENDING
+  SUCCESS
+  EXPIRED
+  ERROR
+}
+
+model users {
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  profile_img String
+  password    String
+  username    String
+  role        role          @relation("UserRole", fields: [roleId], references: [id])
+  roleId      Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  Order       order[]
+  emailTokens emailTokens[]
+
+  createdRoles  role[]          @relation("CreatedByUsers")
+  log_login     log_login[]
+  log_role      log_role[]      @relation("actionBy")
+  log_role2     log_role[]      @relation("getuser")
+  log_broadcast log_broadcast[]
+  log_stock     log_stock[]
+}
+
+model role {
+  id          Int      @id @default(autoincrement())
+  name        String
+  permisson   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdby   users?   @relation("CreatedByUsers", fields: [createdbyId], references: [id])
+  createdbyId Int?
+
+  users users[] @relation("UserRole")
+}
+
+model order {
+  id              Int             @id @default(autoincrement())
+  user            users           @relation(fields: [userId], references: [id])
+  userId          Int
+  Customer        customer        @relation(fields: [customer_Lineid], references: [UserID])
+  customer_Lineid String
+  orderlist       Json
+  message         String?
+  address         String?
+  totalprice      Float
+  quantity        Int
+  status          StatusOrder
+  payments        payment         @relation(fields: [paymentId], references: [id])
+  paymentId       Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deliveryToken   deliveryToken[]
+}
+
+model payment {
+  id          Int           @id @default(autoincrement())
+  price       Float
+  bank_type   String
+  type        TypePayment
+  status      StatusPayment
+  transaction String?
+  respone     Json
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  order order[]
+}
+
+model product {
+  id          Int         @id @default(autoincrement())
+  name        String
+  img_product String?
+  info        String?
+  price       Float
+  quantity    Int
+  status      Boolean
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+  log_stock   log_stock[]
+}
+
+model broadcast {
+  id            Int      @id @default(autoincrement())
+  img_broadcast String?
+  message       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model customer {
+  UserID      String  @unique
+  displayName String
+  pictureUrl  String?
+  Order       order[]
+}
+
 model emailTokens {
   id        Int               @id @default(autoincrement())
   user      users             @relation(fields: [userId], references: [id])
   userId    Int
   token     String
-  status    statusEmailTokens @default(PENDING)
+  status    StatusEmailTokens @default(PENDING)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+}
+
+model deliveryToken {
+  id        Int                  @id @default(autoincrement())
+  token     String
+  order     order                @relation(fields: [orderId], references: [id])
+  orderId   Int
+  status    StatusDeliveryTokens @default(PENDING)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+}
+
+model log_stock {
+  id        Int         @id @default(autoincrement())
+  user      users       @relation(fields: [userId], references: [id])
+  userId    Int
+  product   product     @relation(fields: [productId], references: [id])
+  productId Int
+  details   String?
+  action    ActionStock
+  quantity  Int
+  IP        String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model log_login {
+  id        Int         @id @default(autoincrement())
+  user      users       @relation(fields: [userId], references: [id])
+  userId    Int
+  action    ActionLogin
+  status    StatusLogin
+  IP        String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model log_role {
+  id         Int      @id @default(autoincrement())
+  user       users    @relation("getuser", fields: [userId], references: [id])
+  userId     Int
+  action     String
+  before     String
+  after      String
+  actionBy   users    @relation("actionBy", fields: [actionById], references: [id])
+  actionById Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model log_broadcast {
+  id                Int      @id @default(autoincrement())
+  user              users    @relation(fields: [userId], references: [id])
+  userId            Int
+  broadcast_img     String?
+  broadcast_message String?
+  amount_customer   Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
