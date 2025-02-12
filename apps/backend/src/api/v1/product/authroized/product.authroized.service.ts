@@ -1,19 +1,22 @@
+import { Express } from 'express';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@se/prisma';
 import { Response } from 'src/types/interfaces';
 import { HTTPException } from '@se/customfilter';
 import {
-  StockCreateDTO,
-  StockParamsDTO,
-  StockUpdateDTO,
-} from './stock.authroized.dto';
+  ProductCreateDTO,
+  ProductParamsDTO,
+  ProductUpdateDTO,
+} from './product.authroized.dto';
 import { Request } from 'express';
+import * as fs from 'fs';
+import { generate } from 'randomstring';
 
 @Injectable()
-export class StockAuthroizedService {
+export class ProductAuthroizedService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async StockViewallService(): Promise<Response> {
+  async ProductViewallService(): Promise<Response> {
     const product = await this.prismaService.product.findMany({
       where: {
         deletedAt: null,
@@ -37,17 +40,22 @@ export class StockAuthroizedService {
     };
   }
 
-  async StockCreateService(
-    data: StockCreateDTO,
+  async ProductCreateService(
+    data: ProductCreateDTO,
     req: Request,
+    files: Express.Multer.File,
   ): Promise<Response> {
+    const filename = `${generate(30)}.${files.mimetype.split('/')[1]}`;
+    fs.writeFileSync(`./storage/product/${filename}`, files.buffer);
+    const { name, info, price, status, quantity } = data;
     const product = await this.prismaService.product.create({
       data: {
-        name: data.name,
-        info: data.info,
-        price: data.price,
-        quantity: data.quantity,
-        status: data.status,
+        name: name,
+        img_product: filename,
+        info: info,
+        price: Number(price),
+        quantity: Number(quantity),
+        status: status === 'true',
       },
     });
 
@@ -57,7 +65,7 @@ export class StockAuthroizedService {
       });
     }
 
-    await this.prismaService.log_stock.create({
+    await this.prismaService.logStock.create({
       data: {
         user: { connect: { id: req.users.id } },
         product: { connect: { id: product.id } },
@@ -75,22 +83,46 @@ export class StockAuthroizedService {
     };
   }
 
-  async StockUpdateService(
-    data: StockUpdateDTO,
-    param: StockParamsDTO,
+  async ProductUpdateService(
+    data: ProductUpdateDTO,
+    param: ProductParamsDTO,
     req: Request,
+    files?: Express.Multer.File,
   ): Promise<Response> {
+    const check = await this.prismaService.product.findUnique({
+      where: {
+        id: Number(param.id),
+        deletedAt: null,
+      },
+      select: {
+        img_product: true,
+      },
+    });
+
+    if (!check) {
+      throw new HTTPException({
+        message: 'เกิดข้อผิดพลาด',
+      });
+    }
+
+    let filename = check.img_product;
+    if (files) {
+      filename = `${generate(30)}.${files.mimetype.split('/')[1]}`;
+      fs.writeFileSync(`./storage/product/${filename}`, files.buffer);
+    }
+    const { name, info, price, status, quantity } = data;
+
     const product = await this.prismaService.product.update({
       where: {
         id: Number(param.id),
       },
       data: {
-        name: data.name,
-        // img_product: data.img_product,
-        info: data.info,
-        price: data.price,
-        quantity: data.quantity,
-        status: data.status,
+        name: name,
+        img_product: filename,
+        info: info,
+        price: Number(price),
+        quantity: Number(quantity),
+        status: status,
       },
     });
 
@@ -100,7 +132,7 @@ export class StockAuthroizedService {
       });
     }
 
-    await this.prismaService.log_stock.create({
+    await this.prismaService.logStock.create({
       data: {
         user: { connect: { id: req.users.id } },
         product: { connect: { id: product.id } },
@@ -118,10 +150,21 @@ export class StockAuthroizedService {
     };
   }
 
-  async StockDeleteService(
-    param: StockParamsDTO,
+  async ProductDeleteService(
+    param: ProductParamsDTO,
     req: Request,
   ): Promise<Response> {
+    const check = await this.prismaService.product.findUnique({
+      where: {
+        id: Number(param.id),
+        deletedAt: null,
+      },
+    });
+    if (!check) {
+      throw new HTTPException({
+        message: 'เกิดข้อผิดพลาด',
+      });
+    }
     const product = await this.prismaService.product.update({
       where: {
         id: Number(param.id),
@@ -138,7 +181,7 @@ export class StockAuthroizedService {
       });
     }
 
-    await this.prismaService.log_stock.create({
+    await this.prismaService.logStock.create({
       data: {
         user: { connect: { id: req.users.id } },
         product: { connect: { id: product.id } },

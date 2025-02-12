@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { TransformInterceptor } from '@se/custominterceptor';
 import { AllExceptionsFilter } from '@se/customfilter';
 import { ZodValidationPipe } from '@se/custompipe';
@@ -10,7 +11,8 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AuthModule } from './api/v1/auth/auth.module';
 import { PrismaModule } from '@se/prisma';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { StockModule } from './api/v1/stock/stock.module';
+import { ProductModule } from './api/v1/product/product.module';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -37,9 +39,13 @@ import { StockModule } from './api/v1/stock/stock.module';
       },
       defaults: {},
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'storage'),
+      serveRoot: '/storage',
+    }),
     AuthModule,
     PrismaModule,
-    StockModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [
