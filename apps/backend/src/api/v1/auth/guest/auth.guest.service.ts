@@ -10,24 +10,15 @@ import {
 import { Response } from 'src/types/interfaces';
 import { HTTPException } from '@se/customfilter';
 import * as argon2 from 'argon2';
-import * as nodemailer from 'nodemailer';
 import { generate } from 'randomstring';
+import { MailerService } from '@nestjs-modules/mailer';
 
-const transporter = nodemailer.createTransport({
-  host: '147.50.229.75',
-  port: 587,
-  secure: false,
-  auth: {
-    user: 'software@strity.net',
-    pass: 'vjg518?2U',
-  },
-  tls: { rejectUnauthorized: false },
-});
 @Injectable()
 export class AuthGuestService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prismaService: PrismaService,
+    private readonly mailerService: MailerService,
   ) {}
 
   async loginService(req: LoginDTO): Promise<Response> {
@@ -52,9 +43,8 @@ export class AuthGuestService {
     const payload = await this.jwtService.signAsync({
       id: user.id,
       email: user.email,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      role: user.role,
+      username: user.username,
+      // role: connect : { id: user.role_id },
     });
 
     return {
@@ -89,18 +79,19 @@ export class AuthGuestService {
       },
     });
 
-    const sendmail = await transporter.sendMail({
-      from: '"Tumgapkaomaipen"<software@strity.net>',
-      to: email.email,
-      subject: 'Reset Password',
-      text: `http://localhost:3000/resetpassword?token=${token}`,
-    });
-
-    if (!sendmail) {
-      throw new HTTPException({
-        message: 'เกิดข้อผิดพลาด',
+    await this.mailerService
+      .sendMail({
+        to: email.email,
+        from: '"Tumgapkaomaipen"<software@strity.net>',
+        subject: 'Reset Password',
+        text: `http://localhost:3000/resetpassword?token=${token}`,
+      })
+      .catch((e) => {
+        console.log(e);
+        throw new HTTPException({
+          message: 'เกิดข้อผิดพลาด',
+        });
       });
-    }
 
     return {
       statusCode: 200,
