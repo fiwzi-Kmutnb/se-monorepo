@@ -4,7 +4,7 @@ import Image from "next/image";
 const HistoryOrder = () => {
   return (
 
-    <div>
+    <>
       <div className="grid grid-row-2 gap-1 mt-10">
         <div className="text-4xl font-bold bg-gray mx-10">Order History</div>
         <div className="text-xs font-bold text-gray-400 ml-10">ประวัติการสั่งซื้อ</div>
@@ -157,7 +157,7 @@ const HistoryOrder = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
