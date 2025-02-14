@@ -156,6 +156,7 @@ body {
 }
 
 .app-main {
+  background: #FFFAFA;
   position: relative;
   min-height: 100vh;
   top: 0;
@@ -164,3 +165,4 @@ body {
   width: calc(100% - 250px);
   /* width: calc(100% - 78px); */
 }
+
