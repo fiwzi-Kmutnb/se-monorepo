@@ -9,6 +9,8 @@ import { ZodValidationPipe } from '@se/custompipe';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AuthModule } from './api/v1/auth/auth.module';
 import { PrismaModule } from '@se/prisma';
+import { MemberModule } from './api/v1/member/member.module';
+import { PermissionModule } from './api/v1/permission/permission.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { PrismaModule } from '@se/prisma';
     }),
     AuthModule,
     PrismaModule,
+    MemberModule,
+    PermissionModule,
   ],
   controllers: [AppController],
   providers: [

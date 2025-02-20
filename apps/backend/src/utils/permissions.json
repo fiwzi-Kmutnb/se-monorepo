@@ -1,0 +1,10 @@
+{
+   "edit_roles_member":1,
+   "build_roles":10,
+   "stocks":100,
+   "products":1000,
+   "history":10000,
+   "dashboard":100000,
+   "line":1000000,
+   "log":10000000
+}

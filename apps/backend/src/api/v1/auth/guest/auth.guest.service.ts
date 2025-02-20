@@ -49,12 +49,19 @@ export class AuthGuestService {
       });
     }
 
+    const role = await this.prismaService.role.findUnique({
+      where: {
+        id: user.roleId,
+      },
+    });
+
     const payload = await this.jwtService.signAsync({
       id: user.id,
       email: user.email,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      role: user.role,
+      username: user.username,
+      role: {
+        permission: role.permission,
+      },
     });
 
     return {

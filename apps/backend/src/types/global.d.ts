@@ -29,9 +29,10 @@ declare namespace Express {
     users: {
       id: number;
       email: string;
-      firstname: string;
-      lastname: string;
-      role: string;
+      username: string;
+      role: {
+        permission: number;
+      };
     };
   }
 }
