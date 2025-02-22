@@ -18,6 +18,7 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "typeRoots": ["./node_modules/@types", "src/types/global.d.ts"],
+    "resolveJsonModule": true,
   },
   "files": [
       "src/types/global.d.ts"
@@ -25,5 +26,5 @@
   "include": [
       "src/**/*.ts",
       "src/**/*.d.ts"
-  ]
+]
 }

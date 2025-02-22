@@ -10,6 +10,8 @@ import { ZodValidationPipe } from '@se/custompipe';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AuthModule } from './api/v1/auth/auth.module';
 import { PrismaModule } from '@se/prisma';
+import { MemberModule } from './api/v1/member/member.module';
+import { PermissionModule } from './api/v1/permission/permission.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ProductModule } from './api/v1/product/product.module';
 import { join } from 'path';
@@ -45,6 +47,8 @@ import { join } from 'path';
     }),
     AuthModule,
     PrismaModule,
+    MemberModule,
+    PermissionModule,
     ProductModule,
   ],
   controllers: [AppController],
