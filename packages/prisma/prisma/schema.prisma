@@ -40,6 +40,12 @@ enum StatusDeliveryTokens {
   ERROR
 }
 
+enum ActionRole {
+  CREATE
+  EDIT
+  DELETE
+}
+
 enum StatusPayment {
   FAILED
   SUCCESS
@@ -73,22 +79,18 @@ enum StatusLogin {
 }
 
 model users {
-  id          Int           @id @default(autoincrement())
-  email       String        @unique
-  profile_img String
-  password    String
-  username    String
-  role        role          @relation("UserRole", fields: [roleId], references: [id])
-  roleId      Int
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  deletedAt   DateTime?
-  Order       order[]
-  emailTokens emailTokens[]
-
-  createdRoles role[]         @relation("CreatedByUsers")
-  updatedRoles role[]         @relation("UpdatedByUsers")
-  deletedRoles role[]         @relation("DeletedByUsers")
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  profile_img  String
+  password     String
+  username     String
+  role         role           @relation("UserRole", fields: [roleId], references: [id])
+  roleId       Int
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+  Order        order[]
+  emailTokens  emailTokens[]
   logLogin     logLogin[]
   logRole      logRole[]      @relation("actionBy")
   logRole2     logRole[]      @relation("getuser")
@@ -97,18 +99,12 @@ model users {
 }
 
 model role {
-  id          Int       @id @default(autoincrement())
-  name        String
-  permission  Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdby   users?    @relation("CreatedByUsers", fields: [createdbyId], references: [id])
-  createdbyId Int?
-  updatedby   users?    @relation("UpdatedByUsers", fields: [updatedbyId], references: [id])
-  updatedbyId Int?
-  deletedby   users?    @relation("DeletedByUsers", fields: [deletedbyId], references: [id])
-  deletedbyId Int?
+  id         Int       @id @default(autoincrement())
+  name       String
+  permission Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
   users users[] @relation("UserRole")
 }
@@ -222,16 +218,16 @@ model logLogin {
 }
 
 model logRole {
-  id         Int      @id @default(autoincrement())
-  user       users    @relation("getuser", fields: [userId], references: [id])
+  id         Int        @id @default(autoincrement())
+  user       users      @relation("getuser", fields: [userId], references: [id])
   userId     Int
-  action     String
-  before     String
-  after      String
-  actionBy   users    @relation("actionBy", fields: [actionById], references: [id])
+  action     ActionRole
+  before     String?
+  after      String?
+  actionBy   users      @relation("actionBy", fields: [actionById], references: [id])
   actionById Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 }
 
 model logBroadcast {
