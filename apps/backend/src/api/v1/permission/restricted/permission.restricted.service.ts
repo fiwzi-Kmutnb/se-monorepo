@@ -30,10 +30,7 @@ export class PermissionRestrictedService {
     };
   }
 
-  async CreateRolesService(
-    data: CreateAndUpdateRolesDTO,
-    req: Request,
-  ): Promise<Response> {
+  async CreateRolesService(data: CreateAndUpdateRolesDTO): Promise<Response> {
     const { name, permissions } = data;
     const checkroles = await this.prismaService.role.findFirst({
       where: { name: name },
@@ -55,11 +52,6 @@ export class PermissionRestrictedService {
       data: {
         name: name,
         permission: bitwire,
-        createdby: {
-          connect: {
-            id: req.users.id,
-          },
-        },
       },
     });
 
@@ -101,11 +93,6 @@ export class PermissionRestrictedService {
       where: { id: roles.id },
       data: {
         permission: bitwire,
-        updatedby: {
-          connect: {
-            id: req.users.id,
-          },
-        },
       },
     });
 
@@ -136,11 +123,6 @@ export class PermissionRestrictedService {
       where: { id: roles.id },
       data: {
         deletedAt: new Date().toISOString(),
-        deletedby: {
-          connect: {
-            id: req.users.id,
-          },
-        },
       },
     });
 

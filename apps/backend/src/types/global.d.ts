@@ -30,9 +30,7 @@ declare namespace Express {
       id: number;
       email: string;
       username: string;
-      role: {
-        permission: number;
-      };
+      permission: number;
     };
   }
 }

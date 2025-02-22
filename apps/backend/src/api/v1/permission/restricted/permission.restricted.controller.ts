@@ -31,11 +31,8 @@ export class PermissionRestrictedController {
   }
   @Post()
   @RequirePermission('build_roles')
-  async createRolesController(
-    @Body() body: CreateAndUpdateRolesDTO,
-    @Req() req: Request,
-  ) {
-    return this.PermissionService.CreateRolesService(body, req);
+  async createRolesController(@Body() body: CreateAndUpdateRolesDTO) {
+    return this.PermissionService.CreateRolesService(body);
   }
 
   @Patch('/:id')

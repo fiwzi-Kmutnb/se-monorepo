@@ -21,8 +21,6 @@ export class PermissionGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const user = request.users;
 
-    console.log('user', user);
-
     if (!user) {
       throw new HTTPException({
         message: '',
@@ -31,16 +29,13 @@ export class PermissionGuard implements CanActivate {
 
     const requiredPermissionValue = permissionsData[requiredPermissionKey];
 
-    const userBitwisePermission = user.role.permission;
+    const userBitwisePermission = user.permission;
 
-    console.log('requiredPermissionValue', requiredPermissionValue);
-    console.log('userBitwisePermission', userBitwisePermission);
-    console.log(
-      'requiredPermissionValue & userBitwisePermission',
-      requiredPermissionValue & userBitwisePermission,
-    );
-
-    if ((userBitwisePermission & requiredPermissionValue) === 0) {
+    if (
+      (parseInt(String(userBitwisePermission), 2) &
+        parseInt(String(requiredPermissionValue), 2)) ===
+      0
+    ) {
       throw new HTTPException({
         message: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
       });
