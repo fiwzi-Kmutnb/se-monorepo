@@ -1,5 +1,5 @@
 import {
-  CnURolesDTO,
+  CreateAndUpdateRolesDTO,
   DeleteRolesDTO,
   ParamIdDTO,
 } from './permission.restricted.dto';
@@ -30,7 +30,10 @@ export class PermissionRestrictedService {
     };
   }
 
-  async CreateRolesService(data: CnURolesDTO, req: Request): Promise<Response> {
+  async CreateRolesService(
+    data: CreateAndUpdateRolesDTO,
+    req: Request,
+  ): Promise<Response> {
     const { name, permissions } = data;
     const checkroles = await this.prismaService.role.findFirst({
       where: { name: name },
@@ -70,7 +73,7 @@ export class PermissionRestrictedService {
 
   // Update roles
   async UpdateRolesService(
-    data: CnURolesDTO,
+    data: CreateAndUpdateRolesDTO,
     req: Request,
     param: ParamIdDTO,
   ): Promise<Response> {

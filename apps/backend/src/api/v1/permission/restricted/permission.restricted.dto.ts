@@ -1,7 +1,7 @@
 import { createZodDto } from '@anatine/zod-nestjs';
 import { z } from 'zod';
 
-const cuRolesDTO = z.object({
+const createAndUpdateRolesDTO = z.object({
   name: z
     .string({
       message: 'กรุณากรอกชื่อบทบาท',
@@ -38,6 +38,8 @@ const paramIdDTO = z
     message: 'กรุณากรอก ID ให้ถูกต้อง',
   });
 
-export class CnURolesDTO extends createZodDto(cuRolesDTO) {}
+export class CreateAndUpdateRolesDTO extends createZodDto(
+  createAndUpdateRolesDTO,
+) {}
 export class DeleteRolesDTO extends createZodDto(deleteRolesDTO) {}
 export class ParamIdDTO extends createZodDto(paramIdDTO) {}

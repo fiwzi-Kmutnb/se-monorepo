@@ -86,14 +86,14 @@ model users {
   Order       order[]
   emailTokens emailTokens[]
 
-  createdRoles  role[]          @relation("CreatedByUsers")
-  updatedRoles  role[]          @relation("UpdatedByUsers")
-  deletedRoles  role[]          @relation("DeletedByUsers")
-  log_login     log_login[]
-  log_role      log_role[]      @relation("actionBy")
-  log_role2     log_role[]      @relation("getuser")
-  log_broadcast log_broadcast[]
-  log_stock     log_stock[]
+  createdRoles role[]         @relation("CreatedByUsers")
+  updatedRoles role[]         @relation("UpdatedByUsers")
+  deletedRoles role[]         @relation("DeletedByUsers")
+  logLogin     logLogin[]
+  logRole      logRole[]      @relation("actionBy")
+  logRole2     logRole[]      @relation("getuser")
+  logBroadcast logBroadcast[]
+  logStock     logStock[]
 }
 
 model role {
@@ -148,17 +148,17 @@ model payment {
 }
 
 model product {
-  id          Int         @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   img_product String?
   info        String?
   price       Float
   quantity    Int
   status      Boolean
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   deletedAt   DateTime?
-  log_stock   log_stock[]
+  logStock    logStock[]
 }
 
 model broadcast {
@@ -196,7 +196,7 @@ model deliveryToken {
   updatedAt DateTime             @updatedAt
 }
 
-model log_stock {
+model logStock {
   id        Int         @id @default(autoincrement())
   user      users       @relation(fields: [userId], references: [id])
   userId    Int
@@ -210,7 +210,7 @@ model log_stock {
   updatedAt DateTime    @updatedAt
 }
 
-model log_login {
+model logLogin {
   id        Int         @id @default(autoincrement())
   user      users       @relation(fields: [userId], references: [id])
   userId    Int
@@ -221,7 +221,7 @@ model log_login {
   updatedAt DateTime    @updatedAt
 }
 
-model log_role {
+model logRole {
   id         Int      @id @default(autoincrement())
   user       users    @relation("getuser", fields: [userId], references: [id])
   userId     Int
@@ -234,7 +234,7 @@ model log_role {
   updatedAt  DateTime @updatedAt
 }
 
-model log_broadcast {
+model logBroadcast {
   id                Int      @id @default(autoincrement())
   user              users    @relation(fields: [userId], references: [id])
   userId            Int

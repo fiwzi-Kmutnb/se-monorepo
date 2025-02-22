@@ -35,6 +35,9 @@ export class AuthGuestService {
       where: {
         email: req.email,
       },
+      include: {
+        role: true,
+      },
     });
 
     if (!user) {
@@ -49,19 +52,11 @@ export class AuthGuestService {
       });
     }
 
-    const role = await this.prismaService.role.findUnique({
-      where: {
-        id: user.roleId,
-      },
-    });
-
     const payload = await this.jwtService.signAsync({
       id: user.id,
       email: user.email,
       username: user.username,
-      role: {
-        permission: role.permission,
-      },
+      permission: user.role.permission,
     });
 
     return {
