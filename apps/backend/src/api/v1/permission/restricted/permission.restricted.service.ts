@@ -30,7 +30,10 @@ export class PermissionRestrictedService {
     };
   }
 
-  async CreateRolesService(data: CreateAndUpdateRolesDTO): Promise<Response> {
+  async CreateRolesService(
+    data: CreateAndUpdateRolesDTO,
+    req: Request,
+  ): Promise<Response> {
     const { name, permissions } = data;
     const checkroles = await this.prismaService.role.findFirst({
       where: { name: name },
@@ -52,6 +55,18 @@ export class PermissionRestrictedService {
       data: {
         name: name,
         permission: bitwire,
+      },
+    });
+
+    await this.prismaService.logRole.create({
+      data: {
+        actionBy: {
+          connect: {
+            id: req.users.id,
+          },
+        },
+        namerole: name,
+        action: 'CREATE',
       },
     });
 
@@ -83,6 +98,12 @@ export class PermissionRestrictedService {
       });
     }
 
+    if (roles.permission === -1) {
+      throw new HTTPException({
+        message: `ไม่สามารถแก้ไข Role: ${name} นี้ได้`,
+      });
+    }
+
     const jsonData: Record<string, number> = datapermissions;
     const bitwire = permissions.reduce(
       (acc, key) => acc + (jsonData[key] ?? 0),
@@ -93,6 +114,19 @@ export class PermissionRestrictedService {
       where: { id: roles.id },
       data: {
         permission: bitwire,
+      },
+    });
+    await this.prismaService.logRole.create({
+      data: {
+        actionBy: {
+          connect: {
+            id: req.users.id,
+          },
+        },
+        namerole: name,
+        action: 'EDIT',
+        before: String(roles.permission),
+        after: String(bitwire),
       },
     });
 
@@ -119,10 +153,26 @@ export class PermissionRestrictedService {
         message: `ไม่พบข้อมูล Role: ${name} นี้`,
       });
     }
-    await this.prismaService.role.update({
+
+    if (roles.permission === -1) {
+      throw new HTTPException({
+        message: `ไม่สามารถแก้ไข Role: ${name} นี้ได้`,
+      });
+    }
+
+    await this.prismaService.role.delete({
       where: { id: roles.id },
+    });
+
+    await this.prismaService.logRole.create({
       data: {
-        deletedAt: new Date().toISOString(),
+        actionBy: {
+          connect: {
+            id: req.users.id,
+          },
+        },
+        namerole: name,
+        action: 'DELETE',
       },
     });
 

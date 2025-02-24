@@ -93,7 +93,6 @@ model users {
   emailTokens  emailTokens[]
   logLogin     logLogin[]
   logRole      logRole[]      @relation("actionBy")
-  logRole2     logRole[]      @relation("getuser")
   logBroadcast logBroadcast[]
   logStock     logStock[]
 }
@@ -219,13 +218,12 @@ model logLogin {
 
 model logRole {
   id         Int        @id @default(autoincrement())
-  user       users      @relation("getuser", fields: [userId], references: [id])
-  userId     Int
+  actionBy   users      @relation("actionBy", fields: [actionById], references: [id])
+  actionById Int
+  namerole   String?
   action     ActionRole
   before     String?
   after      String?
-  actionBy   users      @relation("actionBy", fields: [actionById], references: [id])
-  actionById Int
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 }
