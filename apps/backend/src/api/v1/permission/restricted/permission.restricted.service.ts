@@ -156,12 +156,15 @@ export class PermissionRestrictedService {
 
     if (roles.permission === -1) {
       throw new HTTPException({
-        message: `ไม่สามารถแก้ไข Role: ${name} นี้ได้`,
+        message: `ไม่สามารถลบ Role: ${name} นี้ได้`,
       });
     }
 
-    await this.prismaService.role.delete({
+    await this.prismaService.role.update({
       where: { id: roles.id },
+      data: {
+        deletedAt: new Date(),
+      },
     });
 
     await this.prismaService.logRole.create({
