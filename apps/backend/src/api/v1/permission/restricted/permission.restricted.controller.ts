@@ -30,7 +30,7 @@ export class PermissionRestrictedController {
     return this.PermissionService.GetRolesService();
   }
   @Post()
-  @RequirePermission('build_roles')
+  @RequirePermission('rolesCreate')
   async createRolesController(
     @Body() body: CreateAndUpdateRolesDTO,
     @Req() req: Request,
@@ -39,7 +39,7 @@ export class PermissionRestrictedController {
   }
 
   @Patch('/:id')
-  @RequirePermission('edit_roles_member')
+  @RequirePermission('rolesEdit')
   async updateRolesController(
     @Body() body: CreateAndUpdateRolesDTO,
     @Req() req: Request,
@@ -49,7 +49,7 @@ export class PermissionRestrictedController {
   }
 
   @Delete('/:id')
-  @RequirePermission('edit_roles_member')
+  @RequirePermission('rolesEdit')
   async deleteRolesController(@Req() req: Request, @Param() param: ParamIdDTO) {
     return this.PermissionService.DeleteRolesService(req, param);
   }

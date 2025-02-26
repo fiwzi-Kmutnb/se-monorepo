@@ -17,6 +17,7 @@ import {
   ParamIdDTO,
 } from './member.restricted.dto';
 import { Request } from 'express';
+import { RequirePermission } from 'src/decorators/permission.decorator';
 
 @Controller('v1/restricted/member')
 @UseGuards(AuthGuard)
@@ -28,6 +29,7 @@ export class MemberRestrictedController {
   }
 
   @Post()
+  @RequirePermission('memberRegister')
   async createMemberController(
     @Body() body: CreateMemberDTO,
     @Req() req: Request,
@@ -36,6 +38,7 @@ export class MemberRestrictedController {
   }
 
   @Patch('/:id')
+  @RequirePermission('memberEditRoles')
   async updateMemberController(
     @Body() body: UpdateMemberDTO,
     @Req() req: Request,
@@ -45,6 +48,7 @@ export class MemberRestrictedController {
   }
 
   @Delete('/:id')
+  @RequirePermission('memberEditRoles')
   async deleteMemberController(
     @Req() req: Request,
     @Param() param: ParamIdDTO,
