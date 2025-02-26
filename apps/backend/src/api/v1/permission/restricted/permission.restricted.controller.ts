@@ -12,7 +12,7 @@ import {
 import { PermissionRestrictedService } from './permission.restricted.service';
 import {
   CreateAndUpdateRolesDTO,
-  DeleteRolesDTO,
+  // DeleteRolesDTO,
   ParamIdDTO,
 } from './permission.restricted.dto';
 import { UseGuards } from '@nestjs/common';
@@ -50,11 +50,7 @@ export class PermissionRestrictedController {
 
   @Delete('/:id')
   @RequirePermission('edit_roles_member')
-  async deleteRolesController(
-    @Body() body: DeleteRolesDTO,
-    @Req() req: Request,
-    @Param() param: ParamIdDTO,
-  ) {
-    return this.PermissionService.DeleteRolesService(body, req, param);
+  async deleteRolesController(@Req() req: Request, @Param() param: ParamIdDTO) {
+    return this.PermissionService.DeleteRolesService(req, param);
   }
 }

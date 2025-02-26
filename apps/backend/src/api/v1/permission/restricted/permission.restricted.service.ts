@@ -1,6 +1,5 @@
 import {
   CreateAndUpdateRolesDTO,
-  DeleteRolesDTO,
   ParamIdDTO,
 } from './permission.restricted.dto';
 import { Injectable } from '@nestjs/common';
@@ -138,25 +137,20 @@ export class PermissionRestrictedService {
     };
   }
 
-  async DeleteRolesService(
-    data: DeleteRolesDTO,
-    req: Request,
-    param: ParamIdDTO,
-  ): Promise<Response> {
-    const { name } = data;
+  async DeleteRolesService(req: Request, param: ParamIdDTO): Promise<Response> {
     const roles = await this.prismaService.role.findUnique({
       where: { id: Number(param.id) },
     });
 
     if (!roles) {
       throw new HTTPException({
-        message: `ไม่พบข้อมูล Role: ${name} นี้`,
+        message: `ไม่พบข้อมูล Role:${roles.name} นี้`,
       });
     }
 
     if (roles.permission === -1) {
       throw new HTTPException({
-        message: `ไม่สามารถลบ Role: ${name} นี้ได้`,
+        message: `ไม่สามารถลบ Role:${roles.name} นี้ได้`,
       });
     }
 
@@ -174,14 +168,14 @@ export class PermissionRestrictedService {
             id: req.users.id,
           },
         },
-        namerole: name,
+        namerole: roles.name,
         action: 'DELETE',
       },
     });
 
     return {
       statusCode: 200,
-      message: `ลบข้อมูล Role: ${name} สำเร็จ`,
+      message: `ลบข้อมูล Role: ${roles.name} สำเร็จ`,
       type: 'SUCCESS',
       timestamp: new Date().toISOString(),
     };

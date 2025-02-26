@@ -47,7 +47,6 @@ export class AuthGuestService {
       id: user.id,
       email: user.email,
       username: user.username,
-      // role: connect : { id: user.role_id },
     });
 
     return {

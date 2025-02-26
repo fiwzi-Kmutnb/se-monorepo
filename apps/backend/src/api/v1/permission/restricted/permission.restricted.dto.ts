@@ -18,16 +18,6 @@ const createAndUpdateRolesDTO = z.object({
     }),
 });
 
-const deleteRolesDTO = z.object({
-  name: z
-    .string({
-      message: 'กรุณาเลือกชื่อบทบาท',
-    })
-    .min(1, {
-      message: 'กรุณาเลือกชื่อบทบาท',
-    }),
-});
-
 const paramIdDTO = z
   .object({
     id: z.string({
@@ -41,5 +31,5 @@ const paramIdDTO = z
 export class CreateAndUpdateRolesDTO extends createZodDto(
   createAndUpdateRolesDTO,
 ) {}
-export class DeleteRolesDTO extends createZodDto(deleteRolesDTO) {}
+// export class DeleteRolesDTO extends createZodDto(deleteRolesDTO) {}
 export class ParamIdDTO extends createZodDto(paramIdDTO) {}
