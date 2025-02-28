@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@se/prisma';
-import { Response } from 'src/types/interfaces';
 import { CreateMemberDTO, ParamIdDTO } from './member.restricted.dto';
-import { Request } from 'express';
+import { Injectable } from '@nestjs/common';
+import { Response } from 'src/types/interfaces';
+import { PrismaService } from '@se/prisma';
 import { HTTPException } from '@se/customfilter';
+import { Request } from 'express';
 import * as argon2 from 'argon2';
 
 @Injectable()

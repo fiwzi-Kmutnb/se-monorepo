@@ -164,11 +164,12 @@ model product {
 }
 
 model broadcast {
-  id            Int      @id @default(autoincrement())
-  img_broadcast String?
-  message       String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                Int       @id @default(autoincrement())
+  broadcast_img     String?
+  broadcast_message String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
 }
 
 model customer {

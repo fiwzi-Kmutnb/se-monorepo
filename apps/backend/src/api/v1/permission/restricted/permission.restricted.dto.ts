@@ -31,5 +31,4 @@ const paramIdDTO = z
 export class CreateAndUpdateRolesDTO extends createZodDto(
   createAndUpdateRolesDTO,
 ) {}
-// export class DeleteRolesDTO extends createZodDto(deleteRolesDTO) {}
 export class ParamIdDTO extends createZodDto(paramIdDTO) {}

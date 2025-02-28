@@ -12,7 +12,6 @@ import {
 import { PermissionRestrictedService } from './permission.restricted.service';
 import {
   CreateAndUpdateRolesDTO,
-  // DeleteRolesDTO,
   ParamIdDTO,
 } from './permission.restricted.dto';
 import { UseGuards } from '@nestjs/common';
