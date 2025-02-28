@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.3.8",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "socket.io": "^4.8.1"
   }
 }

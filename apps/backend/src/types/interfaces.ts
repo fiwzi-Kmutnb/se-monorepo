@@ -5,3 +5,11 @@ export interface Response {
   type: 'SUCCESS' | 'ERROR' | 'WARNING' | 'WAIT';
   timestamp: string;
 }
+
+export interface ResponseIO {
+  event: string | null;
+  message: string;
+  data?: object | null;
+  type: 'SUCCESS' | 'ERROR' | 'WARNING' | 'WAIT';
+  timestamp?: string;
+}

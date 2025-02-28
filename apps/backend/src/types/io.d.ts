@@ -1,5 +1,7 @@
-declare namespace Express {
-  export interface Request {
+import 'socket.io';
+
+declare module 'socket.io' {
+  interface Socket {
     users: {
       id: number;
       email: string;

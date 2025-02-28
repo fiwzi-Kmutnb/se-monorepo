@@ -20,7 +20,8 @@
     "typeRoots": ["./node_modules/@types", "src/types/global.d.ts"],
   },
   "files": [
-      "src/types/global.d.ts"
+      "src/types/global.d.ts",
+      "src/types/io.d.ts"
   ],
   "include": [
       "src/**/*.ts",
