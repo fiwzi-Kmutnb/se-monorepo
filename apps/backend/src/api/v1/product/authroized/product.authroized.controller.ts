@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Req,
   UseGuards,
   UploadedFile,
@@ -60,7 +61,7 @@ export class ProductAuthroizedController {
     return this.productauthroizedService.ProductCreateService(body, req, files);
   }
 
-  @Patch('/:id')
+  @Put('/:id')
   async ProductUpdateController(
     @Body() body: ProductUpdateDTO,
     @Param() param: ProductParamsDTO,
@@ -88,6 +89,19 @@ export class ProductAuthroizedController {
       param,
       req,
       files,
+    );
+  }
+
+  @Patch('/:id')
+  async ProductUpdateQuantityController(
+    @Body() body: ProductUpdateDTO,
+    @Param() param: ProductParamsDTO,
+    @Req() req: Request,
+  ) {
+    return this.productauthroizedService.ProductUpdateQuantityService(
+      body,
+      param,
+      req,
     );
   }
 

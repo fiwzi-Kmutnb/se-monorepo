@@ -1,6 +1,6 @@
 import { Express } from 'express';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@se/prisma';
+import { PrismaModules, PrismaService } from '@se/prisma';
 import { Response } from 'src/types/interfaces';
 import { HTTPException } from '@se/customfilter';
 import {
@@ -145,6 +145,65 @@ export class ProductAuthroizedService {
     return {
       statusCode: 200,
       message: 'แก้ไขสินค้าสำเร็จ',
+      type: 'SUCCESS',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  async ProductUpdateQuantityService(
+    data: ProductUpdateDTO,
+    param: ProductParamsDTO,
+    req: Request,
+  ): Promise<Response> {
+    const { quantity } = data;
+    let action: PrismaModules.ActionStock;
+    const amount = await this.prismaService.product.findUnique({
+      where: {
+        id: Number(param.id),
+        deletedAt: null,
+      },
+      select: {
+        quantity: true,
+      },
+    });
+    if (amount.quantity < Number(quantity)) {
+      action = 'INCREASE';
+    } else {
+      action = 'DECREASE';
+    }
+
+    const product = await this.prismaService.product.update({
+      where: {
+        id: Number(param.id),
+        deletedAt: null,
+      },
+      data: {
+        quantity: Number(quantity),
+      },
+    });
+
+    if (!product) {
+      throw new HTTPException({
+        message: 'เกิดข้อผิดพลาด',
+      });
+    }
+
+    await this.prismaService.logStock.create({
+      data: {
+        user: { connect: { id: 1 } },
+        product: { connect: { id: product.id } },
+        action: action,
+        quantity: product.quantity,
+        IP: req.ip,
+      },
+    });
+
+    return {
+      statusCode: 200,
+      message: 'อัปเดดสินค้าสำเร็จ',
+      data: {
+        data: product,
+      },
       type: 'SUCCESS',
       timestamp: new Date().toISOString(),
     };

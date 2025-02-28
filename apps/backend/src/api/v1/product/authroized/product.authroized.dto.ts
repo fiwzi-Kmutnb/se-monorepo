@@ -79,6 +79,24 @@ const productparamsDTO = z
     message: 'กรุณากรอก ID ให้ถูกต้อง',
   });
 
+const productquantityDTO = z.object(
+  {
+    quantity: z
+      .string({
+        message: 'กรุณากรอกจำนวน',
+      })
+      .min(1, {
+        message: 'กรุณากรอกจำนวน',
+      })
+      .refine((data) => !isNaN(Number(data)), {
+        message: 'กรุณากรอกจำนวนให้ถูกต้อง',
+      }),
+  },
+  {
+    message: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+  },
+);
 export class ProductCreateDTO extends createZodDto(productcreateDTO) {}
 export class ProductUpdateDTO extends createZodDto(productupdateDTO) {}
 export class ProductParamsDTO extends createZodDto(productparamsDTO) {}
+export class ProductQuantityDTO extends createZodDto(productquantityDTO) {}

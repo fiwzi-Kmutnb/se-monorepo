@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
 import { AuthGuestService } from './auth.guest.service';
 import {
   LoginDTO,
@@ -21,7 +21,7 @@ export class AuthGuestController {
     return this.Authservice.ForgotPasswordVerify(token);
   }
 
-  @Put('forgotpassword/:token')
+  @Patch('forgotpassword/:token')
   async forgotpasswordconfirmController(
     @Body() body: ForgotConfirmPasswordDTO,
     @Param() token: ForgotVerifyDTO,
