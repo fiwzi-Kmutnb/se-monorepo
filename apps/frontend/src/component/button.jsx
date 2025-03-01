@@ -19,17 +19,17 @@ function button() {
             <div className="pt-4">
               <label className="form-control w-full max-w-md ">
                 <div className="label ">
-                  <span className="label-text text-black">Email</span>
+                  <span className="label-text text-black">อีเมล</span>
                 </div>
                 <input
                   type="email"
                   placeholder="กรุณากรอกอีเมลของสมาชิก"
                   value="example@email.com"
-                  className="input input-bordered w-full disabled:bg-gray-400 disabled:border-none disabled:text-gray-600  bg-white"
+                  className="input input-bordered w-full disabled:bg-gray-300 disabled:border-none disabled:text-gray-600  bg-white"
                   disabled
                 />
                 <div className="label ">
-                  <span className="label-text text-black">Username</span>
+                  <span className="label-text text-black">ชื่อ-นามสกุล</span>
                 </div>
                 <input
                   type="text"
@@ -37,17 +37,17 @@ function button() {
                   className="input input-bordered w-full  bg-white"
                 />
                 <div className="label ">
-                  <span className="label-text text-black">Password</span>
+                  <span className="label-text text-black">รหัสผ่าน</span>
                 </div>
                 <input
                   type="Password"
                   placeholder="กรุณากรอกรหัสผ่านของสมาชิก"
                   value="12131313131"
-                  className="input input-bordered w-full bg-white  disabled:bg-gray-400 disabled:border-none disabled:text-gray-600"
+                  className="input input-bordered w-full bg-white  disabled:bg-gray-300 disabled:border-none disabled:text-gray-600"
                   disabled
                 />
                 <div className="label ">
-                  <span className="label-text text-black">Role</span>
+                  <span className="label-text text-black">บทบาท</span>
                 </div>
                 <select className="select select-bordered bg-white">
                   <option disabled selected>
