@@ -12,7 +12,6 @@ import * as datapermissions from 'src/utils/permissions.json';
 @Injectable()
 export class PermissionRestrictedService {
   constructor(private readonly prismaService: PrismaService) {}
-  // Get roles
   async GetRolesService(): Promise<Response> {
     const roles = await this.prismaService.role.findMany({
       where: {
@@ -77,7 +76,6 @@ export class PermissionRestrictedService {
     };
   }
 
-  // Update roles
   async UpdateRolesService(
     data: CreateAndUpdateRolesDTO,
     req: Request,

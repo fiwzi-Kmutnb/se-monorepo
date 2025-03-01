@@ -77,6 +77,12 @@ enum ActionLogin {
   FORGOTPASSWORD
 }
 
+enum ActionBroadcast {
+  ANNOUNCE
+  CREATE
+  DELETE
+}
+
 enum StatusLogin {
   PENDING
   SUCCESS
@@ -100,7 +106,7 @@ model users {
   logLogin     logLogin[]
   logRole      logRole[]      @relation("actionBy")
   logMember    logMember[]    @relation("actionBy")
-  logBroadcast logBroadcast[]
+  logBroadcast logBroadcast[] @relation("actionBy")
   logStock     logStock[]
 }
 
@@ -164,12 +170,12 @@ model product {
 }
 
 model broadcast {
-  id                Int       @id @default(autoincrement())
-  broadcast_img     String?
-  broadcast_message String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  deletedAt         DateTime?
+  id               Int       @id @default(autoincrement())
+  broadcastImage   String?
+  broadcastMessage String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
 }
 
 model customer {
@@ -249,12 +255,13 @@ model logMember {
 }
 
 model logBroadcast {
-  id                Int      @id @default(autoincrement())
-  user              users    @relation(fields: [userId], references: [id])
-  userId            Int
-  broadcast_img     String?
-  broadcast_message String?
-  amount_customer   Int
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               Int             @id @default(autoincrement())
+  actionBy         users           @relation("actionBy", fields: [actionById], references: [id])
+  actionById       Int
+  action           ActionBroadcast
+  broadcastImage   String?
+  broadcastMessage String?
+  amount_customer  Int?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }

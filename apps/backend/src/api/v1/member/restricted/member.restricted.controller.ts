@@ -24,6 +24,7 @@ import { RequirePermission } from 'src/decorators/permission.decorator';
 export class MemberRestrictedController {
   constructor(private readonly MemberService: MemberRestrictedService) {}
   @Get()
+  @RequirePermission('memberEditRoles')
   async getMemberController() {
     return this.MemberService.GetMemberService();
   }

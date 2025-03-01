@@ -2,8 +2,7 @@ import { createZodDto } from '@anatine/zod-nestjs';
 import { z } from 'zod';
 
 const announceBroadcastDTO = z.object({
-  broadcast_message: z.string({ message: 'กรุณากรอกข้อความ' }).optional(),
-  broadcast_img: z.string({ message: 'กรุณากรอก URL' }).url().optional(),
+  broadcastMessage: z.string({ message: 'กรุณากรอกข้อความ' }).optional(),
 });
 
 const paramIdDTO = z

@@ -9,7 +9,6 @@ import * as argon2 from 'argon2';
 @Injectable()
 export class MemberRestrictedService {
   constructor(private readonly prismaService: PrismaService) {}
-  // Get member
   async GetMemberService(): Promise<Response> {
     const member = await this.prismaService.users.findMany({
       where: {
@@ -43,6 +42,18 @@ export class MemberRestrictedService {
       });
     }
 
+    const roleCheck = await this.prismaService.role.findUnique({
+      where: {
+        name: role,
+      },
+    });
+
+    if (!roleCheck) {
+      throw new HTTPException({
+        message: `Role ${role} ไม่พบในระบบ`,
+      });
+    }
+
     await this.prismaService.users.create({
       data: {
         email: email,
@@ -53,6 +64,7 @@ export class MemberRestrictedService {
         },
       },
     });
+
     await this.prismaService.logMember.create({
       data: {
         actionBy: {
@@ -72,7 +84,6 @@ export class MemberRestrictedService {
       timestamp: new Date().toISOString(),
     };
   }
-  // Update member
   async UpdateMemberService(
     data: CreateMemberDTO,
     req: Request,
@@ -83,11 +94,26 @@ export class MemberRestrictedService {
       where: {
         id: Number(param.id),
       },
+      include: {
+        role: true,
+      },
     });
 
     if (!member) {
       throw new HTTPException({
         message: `ไม่พบข้อมูล Member นี้`,
+      });
+    }
+
+    const roleCheck = await this.prismaService.role.findUnique({
+      where: {
+        name: role,
+      },
+    });
+
+    if (!roleCheck) {
+      throw new HTTPException({
+        message: `Role ${role} ไม่พบในระบบ`,
       });
     }
 
@@ -111,7 +137,7 @@ export class MemberRestrictedService {
           },
           email: email,
           action: 'EDIT',
-          before: member.roleId.toString(),
+          before: member.role.name,
           after: role,
         },
       });
@@ -141,7 +167,7 @@ export class MemberRestrictedService {
           },
           email: email,
           action: 'EDIT',
-          before: `${member.username} ${member.roleId}`,
+          before: `${member.username} ${member.role.name}`,
           after: `${username} ${role}`,
         },
       });
@@ -154,7 +180,6 @@ export class MemberRestrictedService {
       timestamp: new Date().toISOString(),
     };
   }
-  // Delete member
   async DeleteMemberService(
     req: Request,
     param: ParamIdDTO,

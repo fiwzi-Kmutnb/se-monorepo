@@ -6,6 +6,8 @@ import { PrismaService } from '@se/prisma';
 import { HTTPException } from '@se/customfilter';
 import { Request } from 'express';
 import { firstValueFrom } from 'rxjs';
+import { generate } from 'randomstring';
+import * as fs from 'fs';
 
 @Injectable()
 export class BroadcastRestrictedService {
@@ -14,22 +16,27 @@ export class BroadcastRestrictedService {
     private readonly httpService: HttpService,
   ) {}
 
-  async SendBroadcastMessage(
+  async SendBroadcastMessageService(
     data: AnnounceBroadcastDTO,
+    files: Express.Multer.File,
     req: Request,
   ): Promise<Response> {
-    const { broadcast_message, broadcast_img } = data;
+    const { broadcastMessage } = data;
 
-    const messagePayload = broadcast_message
-      ? [{ type: 'text', text: broadcast_message }]
+    const filename = `${generate(30)}.${files.mimetype.split('/')[1]}`;
+    fs.writeFileSync(`./storage/broadcast/${filename}`, files.buffer);
+
+    const messagePayload = broadcastMessage
+      ? [{ type: 'text', text: broadcastMessage }]
       : [];
 
-    const imagePayload = broadcast_img
+    const broadcastImage = `www.localhost:5000/storage/broadcast/${filename}`;
+    const imagePayload = broadcastImage
       ? [
           {
             type: 'image',
-            originalContentUrl: broadcast_img,
-            previewImageUrl: broadcast_img,
+            originalContentUrl: broadcastImage,
+            previewImageUrl: broadcastImage,
           },
         ]
       : [];
@@ -67,15 +74,16 @@ export class BroadcastRestrictedService {
         );
       })
       .then((follower) => {
-        if (broadcast_message || broadcast_img) {
+        if (broadcastMessage || broadcastImage) {
           return this.prismaService.logBroadcast.create({
             data: {
-              broadcast_img: broadcast_img || '',
-              broadcast_message: broadcast_message || '',
+              broadcastImage: broadcastImage,
+              broadcastMessage: broadcastMessage,
               amount_customer: follower.data.followers,
-              user: {
+              actionBy: {
                 connect: { id: req.users.id },
               },
+              action: 'ANNOUNCE',
             },
           });
         }
@@ -90,7 +98,7 @@ export class BroadcastRestrictedService {
         throw new HTTPException({ message: 'ส่งข้อความ Broadcast ไม่สำเร็จ' });
       });
   }
-  async GetBroadcastMessage(): Promise<Response> {
+  async GetBroadcastMessageService(): Promise<Response> {
     const broadcastMessage = await this.prismaService.broadcast.findMany({
       where: { deletedAt: null },
     });
@@ -104,17 +112,29 @@ export class BroadcastRestrictedService {
     };
   }
 
-  async CreateBroadcastMessage(data: AnnounceBroadcastDTO): Promise<Response> {
-    const { broadcast_message, broadcast_img } = data;
-
-    if (!broadcast_message && !broadcast_img) {
-      throw new HTTPException({ message: 'กรุณากรอกข้อความหรือ URL' });
-    }
+  async CreateBroadcastMessageService(
+    data: AnnounceBroadcastDTO,
+    files: Express.Multer.File,
+    req: Request,
+  ): Promise<Response> {
+    const { broadcastMessage } = data;
+    const filename = `${generate(30)}.${files.mimetype.split('/')[1]}`;
+    fs.writeFileSync(`./storage/broadcast/${filename}`, files.buffer);
 
     await this.prismaService.broadcast.create({
       data: {
-        broadcast_message: broadcast_message || '',
-        broadcast_img: broadcast_img || '',
+        broadcastMessage: broadcastMessage,
+        broadcastImage: filename,
+      },
+    });
+    await this.prismaService.logBroadcast.create({
+      data: {
+        broadcastImage: filename,
+        broadcastMessage: broadcastMessage,
+        actionBy: {
+          connect: { id: req.users.id },
+        },
+        action: 'CREATE',
       },
     });
 
@@ -126,38 +146,7 @@ export class BroadcastRestrictedService {
     };
   }
 
-  async UpdateBroadcastMessage(
-    data: AnnounceBroadcastDTO,
-    req: Request,
-    param: ParamIdDTO,
-  ): Promise<Response> {
-    const { broadcast_message, broadcast_img } = data;
-
-    const broadcast = await this.prismaService.broadcast.findUnique({
-      where: { id: Number(param.id) },
-    });
-
-    if (!broadcast) {
-      throw new HTTPException({ message: 'ไม่พบข้อมูล Broadcast' });
-    }
-
-    await this.prismaService.broadcast.update({
-      where: { id: Number(param.id) },
-      data: {
-        broadcast_message: broadcast_message || broadcast.broadcast_message,
-        broadcast_img: broadcast_img || broadcast.broadcast_img,
-      },
-    });
-
-    return {
-      statusCode: 200,
-      message: 'อัปเดตข้อมูลสำเร็จ',
-      type: 'SUCCESS',
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  async DeleteBroadcastMessage(
+  async DeleteBroadcastMessageService(
     req: Request,
     param: ParamIdDTO,
   ): Promise<Response> {

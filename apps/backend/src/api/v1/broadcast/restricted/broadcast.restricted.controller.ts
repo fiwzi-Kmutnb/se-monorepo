@@ -5,47 +5,90 @@ import {
   Post,
   Req,
   Get,
-  Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipeBuilder,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/utils/jwt.guard';
 import { BroadcastRestrictedService } from './broadcast.restricted.service';
 import { AnnounceBroadcastDTO, ParamIdDTO } from './broadcast.restricted.DTO';
 import { Request } from 'express';
+import { RequirePermission } from 'src/decorators/permission.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { HTTPException } from '@se/customfilter';
 
 @Controller('v1/restricted/broadcast')
 @UseGuards(AuthGuard)
 export class BroadcastRestrictedController {
   constructor(private readonly BroadcastService: BroadcastRestrictedService) {}
   @Post('/announce')
+  @RequirePermission('broadCast')
+  @UseInterceptors(FileInterceptor('files'))
   async announceBroadcastController(
     @Body() body: AnnounceBroadcastDTO,
     @Req() req: Request,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpeg|jpg|png|gif)$/,
+        })
+        .addMaxSizeValidator({ maxSize: 1024 * 1024 * 5 })
+        .build({
+          errorHttpStatusCode: 400,
+          exceptionFactory(error) {
+            throw new HTTPException({
+              message: error,
+            });
+          },
+        }),
+    )
+    files: Express.Multer.File,
   ) {
-    return this.BroadcastService.SendBroadcastMessage(body, req);
+    return this.BroadcastService.SendBroadcastMessageService(body, files, req);
   }
   @Get()
+  @RequirePermission('broadCast')
   async getBroadcastMessageController() {
-    return this.BroadcastService.GetBroadcastMessage();
+    return this.BroadcastService.GetBroadcastMessageService();
   }
   @Post()
-  async createBroadcastController(@Body() body: AnnounceBroadcastDTO) {
-    return this.BroadcastService.CreateBroadcastMessage(body);
-  }
-  @Patch('/:id')
-  async updateBroadcastController(
-    @Body() body: AnnounceBroadcastDTO,
+  @RequirePermission('broadCast')
+  @UseInterceptors(FileInterceptor('files'))
+  async createBroadcastController(
     @Req() req: Request,
-    @Param() param: ParamIdDTO,
+    @Body() body: AnnounceBroadcastDTO,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpeg|jpg|png|gif)$/,
+        })
+        .addMaxSizeValidator({ maxSize: 1024 * 1024 * 5 })
+        .build({
+          errorHttpStatusCode: 400,
+          exceptionFactory(error) {
+            throw new HTTPException({
+              message: error,
+            });
+          },
+        }),
+    )
+    files: Express.Multer.File,
   ) {
-    return this.BroadcastService.UpdateBroadcastMessage(body, req, param);
+    return this.BroadcastService.CreateBroadcastMessageService(
+      body,
+      files,
+      req,
+    );
   }
+
   @Delete('/:id')
+  @RequirePermission('broadCast')
   async deleteBroadcastController(
     @Req() req: Request,
     @Param() param: ParamIdDTO,
   ) {
-    return this.BroadcastService.DeleteBroadcastMessage(req, param);
+    return this.BroadcastService.DeleteBroadcastMessageService(req, param);
   }
 }
