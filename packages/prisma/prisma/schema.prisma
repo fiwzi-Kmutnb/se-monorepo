@@ -46,6 +46,12 @@ enum ActionRole {
   DELETE
 }
 
+enum ActionMember {
+  CREATE
+  EDIT
+  DELETE
+}
+
 enum StatusPayment {
   FAILED
   SUCCESS
@@ -71,6 +77,12 @@ enum ActionLogin {
   FORGOTPASSWORD
 }
 
+enum ActionBroadcast {
+  ANNOUNCE
+  CREATE
+  DELETE
+}
+
 enum StatusLogin {
   PENDING
   SUCCESS
@@ -81,7 +93,7 @@ enum StatusLogin {
 model users {
   id           Int            @id @default(autoincrement())
   email        String         @unique
-  profile_img  String
+  profile_img  String?
   password     String
   username     String
   role         role           @relation("UserRole", fields: [roleId], references: [id])
@@ -93,14 +105,14 @@ model users {
   emailTokens  emailTokens[]
   logLogin     logLogin[]
   logRole      logRole[]      @relation("actionBy")
-  logRole2     logRole[]      @relation("getuser")
-  logBroadcast logBroadcast[]
+  logMember    logMember[]    @relation("actionBy")
+  logBroadcast logBroadcast[] @relation("actionBy")
   logStock     logStock[]
 }
 
 model role {
   id         Int       @id @default(autoincrement())
-  name       String
+  name       String    @unique
   permission Int
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -158,11 +170,12 @@ model product {
 }
 
 model broadcast {
-  id            Int      @id @default(autoincrement())
-  img_broadcast String?
-  message       String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               Int       @id @default(autoincrement())
+  broadcastImage   String?
+  broadcastMessage String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
 }
 
 model customer {
@@ -219,24 +232,36 @@ model logLogin {
 
 model logRole {
   id         Int        @id @default(autoincrement())
-  user       users      @relation("getuser", fields: [userId], references: [id])
-  userId     Int
+  actionBy   users      @relation("actionBy", fields: [actionById], references: [id])
+  actionById Int
+  namerole   String?
   action     ActionRole
   before     String?
   after      String?
-  actionBy   users      @relation("actionBy", fields: [actionById], references: [id])
-  actionById Int
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 }
 
+model logMember {
+  id         Int          @id @default(autoincrement())
+  actionBy   users        @relation("actionBy", fields: [actionById], references: [id])
+  actionById Int
+  email      String?
+  action     ActionMember
+  before     String?
+  after      String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
 model logBroadcast {
-  id                Int      @id @default(autoincrement())
-  user              users    @relation(fields: [userId], references: [id])
-  userId            Int
-  broadcast_img     String?
-  broadcast_message String?
-  amount_customer   Int
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               Int             @id @default(autoincrement())
+  actionBy         users           @relation("actionBy", fields: [actionById], references: [id])
+  actionById       Int
+  action           ActionBroadcast
+  broadcastImage   String?
+  broadcastMessage String?
+  amount_customer  Int?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }

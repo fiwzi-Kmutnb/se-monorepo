@@ -1,14 +1,18 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { HTTPException } from '@se/customfilter';
+import { PrismaService } from '@se/prisma';
 import { Request } from 'express';
 import * as permissionsData from 'src/utils/permissions.json';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private readonly prismaService: PrismaService,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissionKey = this.reflector.get<string>(
       'permission',
       context.getHandler(),
@@ -29,7 +33,16 @@ export class PermissionGuard implements CanActivate {
 
     const requiredPermissionValue = permissionsData[requiredPermissionKey];
 
-    const userBitwisePermission = user.permission;
+    const userperm = await this.prismaService.users.findUnique({
+      where: {
+        id: user.id,
+      },
+      include: {
+        role: true,
+      },
+    });
+
+    const userBitwisePermission = userperm.role.permission;
 
     if (
       (parseInt(String(userBitwisePermission), 2) &

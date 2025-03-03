@@ -12,7 +12,6 @@ import {
 import { PermissionRestrictedService } from './permission.restricted.service';
 import {
   CreateAndUpdateRolesDTO,
-  DeleteRolesDTO,
   ParamIdDTO,
 } from './permission.restricted.dto';
 import { UseGuards } from '@nestjs/common';
@@ -30,13 +29,16 @@ export class PermissionRestrictedController {
     return this.PermissionService.GetRolesService();
   }
   @Post()
-  @RequirePermission('build_roles')
-  async createRolesController(@Body() body: CreateAndUpdateRolesDTO) {
-    return this.PermissionService.CreateRolesService(body);
+  @RequirePermission('rolesCreate')
+  async createRolesController(
+    @Body() body: CreateAndUpdateRolesDTO,
+    @Req() req: Request,
+  ) {
+    return this.PermissionService.CreateRolesService(body, req);
   }
 
   @Patch('/:id')
-  @RequirePermission('edit_roles_member')
+  @RequirePermission('rolesEdit')
   async updateRolesController(
     @Body() body: CreateAndUpdateRolesDTO,
     @Req() req: Request,
@@ -46,12 +48,8 @@ export class PermissionRestrictedController {
   }
 
   @Delete('/:id')
-  @RequirePermission('edit_roles_member')
-  async deleteRolesController(
-    @Body() body: DeleteRolesDTO,
-    @Req() req: Request,
-    @Param() param: ParamIdDTO,
-  ) {
-    return this.PermissionService.DeleteRolesService(body, req, param);
+  @RequirePermission('rolesEdit')
+  async deleteRolesController(@Req() req: Request, @Param() param: ParamIdDTO) {
+    return this.PermissionService.DeleteRolesService(req, param);
   }
 }

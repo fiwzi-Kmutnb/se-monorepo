@@ -14,6 +14,7 @@ import { MemberModule } from './api/v1/member/member.module';
 import { PermissionModule } from './api/v1/permission/permission.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ProductModule } from './api/v1/product/product.module';
+import { BroadcastModule } from './api/v1/broadcast/broadcast.module';
 import { join } from 'path';
 
 @Module({
@@ -50,6 +51,7 @@ import { join } from 'path';
     MemberModule,
     PermissionModule,
     ProductModule,
+    BroadcastModule,
   ],
   controllers: [AppController],
   providers: [

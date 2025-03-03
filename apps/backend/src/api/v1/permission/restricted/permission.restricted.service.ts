@@ -1,6 +1,5 @@
 import {
   CreateAndUpdateRolesDTO,
-  DeleteRolesDTO,
   ParamIdDTO,
 } from './permission.restricted.dto';
 import { Injectable } from '@nestjs/common';
@@ -13,7 +12,6 @@ import * as datapermissions from 'src/utils/permissions.json';
 @Injectable()
 export class PermissionRestrictedService {
   constructor(private readonly prismaService: PrismaService) {}
-  // Get roles
   async GetRolesService(): Promise<Response> {
     const roles = await this.prismaService.role.findMany({
       where: {
@@ -30,7 +28,10 @@ export class PermissionRestrictedService {
     };
   }
 
-  async CreateRolesService(data: CreateAndUpdateRolesDTO): Promise<Response> {
+  async CreateRolesService(
+    data: CreateAndUpdateRolesDTO,
+    req: Request,
+  ): Promise<Response> {
     const { name, permissions } = data;
     const checkroles = await this.prismaService.role.findFirst({
       where: { name: name },
@@ -55,6 +56,18 @@ export class PermissionRestrictedService {
       },
     });
 
+    await this.prismaService.logRole.create({
+      data: {
+        actionBy: {
+          connect: {
+            id: req.users.id,
+          },
+        },
+        namerole: name,
+        action: 'CREATE',
+      },
+    });
+
     return {
       statusCode: 200,
       message: `บันทึกข้อมูลสำเร็จ Role: ${name}`,
@@ -63,7 +76,6 @@ export class PermissionRestrictedService {
     };
   }
 
-  // Update roles
   async UpdateRolesService(
     data: CreateAndUpdateRolesDTO,
     req: Request,
@@ -83,6 +95,12 @@ export class PermissionRestrictedService {
       });
     }
 
+    if (roles.permission === -1) {
+      throw new HTTPException({
+        message: `ไม่สามารถแก้ไข Role: ${name} นี้ได้`,
+      });
+    }
+
     const jsonData: Record<string, number> = datapermissions;
     const bitwire = permissions.reduce(
       (acc, key) => acc + (jsonData[key] ?? 0),
@@ -95,6 +113,19 @@ export class PermissionRestrictedService {
         permission: bitwire,
       },
     });
+    await this.prismaService.logRole.create({
+      data: {
+        actionBy: {
+          connect: {
+            id: req.users.id,
+          },
+        },
+        namerole: name,
+        action: 'EDIT',
+        before: String(roles.permission),
+        after: String(bitwire),
+      },
+    });
 
     return {
       statusCode: 200,
@@ -104,31 +135,45 @@ export class PermissionRestrictedService {
     };
   }
 
-  async DeleteRolesService(
-    data: DeleteRolesDTO,
-    req: Request,
-    param: ParamIdDTO,
-  ): Promise<Response> {
-    const { name } = data;
+  async DeleteRolesService(req: Request, param: ParamIdDTO): Promise<Response> {
     const roles = await this.prismaService.role.findUnique({
       where: { id: Number(param.id) },
     });
 
     if (!roles) {
       throw new HTTPException({
-        message: `ไม่พบข้อมูล Role: ${name} นี้`,
+        message: `ไม่พบข้อมูล Role:${roles.name} นี้`,
       });
     }
+
+    if (roles.permission === -1) {
+      throw new HTTPException({
+        message: `ไม่สามารถลบ Role:${roles.name} นี้ได้`,
+      });
+    }
+
     await this.prismaService.role.update({
       where: { id: roles.id },
       data: {
-        deletedAt: new Date().toISOString(),
+        deletedAt: new Date(),
+      },
+    });
+
+    await this.prismaService.logRole.create({
+      data: {
+        actionBy: {
+          connect: {
+            id: req.users.id,
+          },
+        },
+        namerole: roles.name,
+        action: 'DELETE',
       },
     });
 
     return {
       statusCode: 200,
-      message: `ลบข้อมูล Role: ${name} สำเร็จ`,
+      message: `ลบข้อมูล Role: ${roles.name} สำเร็จ`,
       type: 'SUCCESS',
       timestamp: new Date().toISOString(),
     };

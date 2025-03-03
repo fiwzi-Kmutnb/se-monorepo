@@ -1,10 +1,13 @@
 {
-   "edit_roles_member":1,
-   "build_roles":10,
-   "stocks":100,
-   "products":1000,
-   "history":10000,
-   "dashboard":100000,
-   "line":1000000,
-   "log":10000000
+  "memberRegister": 1,
+  "memberEditRoles": 10,
+  "rolesCreate": 100,
+  "rolesEdit": 1000,
+  "stockEdit": 10000,
+  "productEdit": 100000,
+  "historyOrder": 1000000,
+  "dashboardAnalysis": 10000000,
+  "lineChat": 100000000,
+  "broadCast": 1000000000,
+  "logSystem": 10000000000
 }
