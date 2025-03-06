@@ -24,6 +24,13 @@ enum StatusOrder {
   ERROR
 }
 
+enum StatusReplyTokens {
+  ACTIVE
+  USED
+  EXPIRED
+  ERROR
+}
+
 enum StatusEmailTokens {
   PENDING
   VERIFIED
@@ -162,13 +169,6 @@ model broadcast {
   updatedAt     DateTime @updatedAt
 }
 
-model customer {
-  UserID      String  @unique
-  displayName String
-  pictureUrl  String?
-  Order       order[]
-}
-
 model emailTokens {
   id        Int               @id @default(autoincrement())
   user      users             @relation(fields: [userId], references: [id])
@@ -236,4 +236,22 @@ model logBroadcast {
   amount_customer   Int
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+model customer {
+  UserID      String       @unique
+  displayName String
+  pictureUrl  String?
+  Order       order[]
+  replyToken  replyToken[]
+}
+
+model replyToken {
+  id        Int               @id @default(autoincrement())
+  customer  customer          @relation(fields: [cusID], references: [UserID])
+  cusID     String
+  token     String
+  status    StatusReplyTokens @default(ACTIVE)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 }
