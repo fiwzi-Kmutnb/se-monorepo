@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import Layout from "@/component/layout";
 import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  Tooltip,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
+  ResponsiveContainer,
 } from "recharts";
 
 const stats = [
@@ -52,25 +54,179 @@ const worstProducts = [
   { id: 2, name: "Product Y", sales: 15 },
   { id: 3, name: "Product Z", sales: 20 },
 ];
-const grap = [
-  { month: "JAN", total: 400, current: 100 },
-  { month: "FEB", total: 400, current: 150 },
-  { month: "MAR", total: 400, current: 200 },
-  { month: "APR", total: 400, current: 250 },
-  { month: "MAY", total: 400, current: 280 },
-  { month: "JUN", total: 400, current: 200 },
-  { month: "JUL", total: 400, current: 230 },
-  { month: "AUG", total: 400, current: 120 },
-  { month: "SEP", total: 400, current: 270 },
-  { month: "OCT", total: 400, current: 320 },
-  { month: "NOV", total: 400, current: 360 },
-  { month: "DEC", total: 400, current: 400 },
+const yearlyData = [
+  { year: "2021", total: 5000, current: 3500 },
+  { year: "2022", total: 6000, current: 4000 },
+  { year: "2023", total: 7000, current: 4500 },
+  { year: "2024", total: 8000, current: 5000 },
+];
+
+// สร้างข้อมูลรายวัน
+const generateDailyData = () => {
+  const months = [
+    "JAN",
+    "FEB",
+    "MAR",
+    "APR",
+    "MAY",
+    "JUN",
+    "JUL",
+    "AUG",
+    "SEP",
+    "OCT",
+    "NOV",
+    "DEC",
+  ];
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  let dailyData = [];
+
+  for (let day = 1; day <= 31; day++) {
+    let entry = { day };
+
+    months.forEach((month, index) => {
+      if (day <= daysInMonth[index]) {
+        entry[month] = Math.floor(Math.random() * (1200 - 400 + 1) + 400); // สุ่มค่า 400 - 1200
+      }
+    });
+
+    dailyData.push(entry);
+  }
+
+  return dailyData;
+};
+
+const dailyData = generateDailyData();
+
+const colors = [
+  "#FF0000",
+  "#FF7F00",
+  "#FFFF00",
+  "#7FFF00",
+  "#00FF00",
+  "#00FF7F",
+  "#00FFFF",
+  "#007FFF",
+  "#0000FF",
+  "#7F00FF",
+  "#FF00FF",
+  "#FF007F",
 ];
 
 function Dashboard() {
+  const [selectedOption, setSelectedOption] = useState("daily");
+  const [selectedMonths, setSelectedMonths] = useState([
+    "JAN",
+    "FEB",
+    "MAR",
+    "APR",
+    "MAY",
+    "JUN",
+    "JUL",
+    "AUG",
+    "SEP",
+    "OCT",
+    "NOV",
+    "DEC",
+  ]);
+
+  const toggleMonth = (month) => {
+    setSelectedMonths((prev) =>
+      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month]
+    );
+  };
+
   return (
     <div className="m-5 md:m-10">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-[70vh]">
+      <div className="p-4 bg-white shadow-lg rounded-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-700">
+            {selectedOption === "daily" ? "รายได้รายวัน" : "รายได้รายปี"}
+          </h2>
+          <select
+            className="border p-2 rounded-lg bg-white text-black border-none"
+            value={selectedOption}
+            onChange={(e) => setSelectedOption(e.target.value)}
+          >
+            <option value="daily">รายวัน</option>
+            <option value="yearly">รายปี</option>
+          </select>
+        </div>
+
+        {selectedOption === "daily" && (
+          <div className="grid grid-cols-6 gap-2 mb-4">
+            {Object.keys(dailyData[0])
+              .slice(1)
+              .map((month, index) => (
+                <label key={month} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedMonths.includes(month)}
+                    onChange={() => toggleMonth(month)}
+                    className="form-checkbox h-4 w-4 text-blue-600"
+                  />
+                  <span style={{ color: colors[index] }}>{month}</span>
+                </label>
+              ))}
+          </div>
+        )}
+
+        {selectedOption === "daily" ? (
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={dailyData}>
+              <XAxis
+                dataKey="day"
+                tick={{ fill: "#6B7280" }}
+                label={{
+                  value: "วันที่",
+                  position: "insideBottom",
+                  offset: -5,
+                }}
+              />
+              <YAxis
+                tick={{ fill: "#6B7280" }}
+                label={{
+                  value: "รายได้ (บาท)",
+                  angle: -90,
+                  position: "insideLeft",
+                }}
+              />
+              <Tooltip />
+
+              {selectedMonths.map((month, index) => (
+                <Line
+                  key={month}
+                  type="monotone"
+                  dataKey={month}
+                  stroke={colors[index]}
+                  strokeWidth={0.5}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={yearlyData} barGap={8}>
+              <XAxis dataKey="year" tick={{ fill: "#6B7280" }} />
+              <YAxis tick={{ fill: "#6B7280" }} />
+              <Tooltip />
+              <Bar
+                dataKey="total"
+                fill="#3B82F6"
+                barSize={40}
+                radius={[5, 5, 0, 0]}
+              />
+              <Bar
+                dataKey="current"
+                fill="#E11D48"
+                barSize={40}
+                radius={[5, 5, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+      <div className="grid grid-cols-1 mt-10 gap-4 min-h-[70vh]">
         <div className="grid grid-rows-2 gap-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {stats.map((stat, index) => (
@@ -80,7 +236,7 @@ function Dashboard() {
               >
                 <div className="stat">
                   <div className="stat-title text-black">{stat.title}</div>
-                  <div className="stat-value text-3xl">
+                  <div className="stat-value font-semibold text-3xl">
                     {stat.value}{" "}
                     <span className="text-lg text-gray-500">{stat.unit}</span>
                   </div>
@@ -121,30 +277,7 @@ function Dashboard() {
               </table>
             </div>
           </div>
-        </div>
-        <div className="grid grid-rows-2 gap-4">
-          <div>
-            <div className="p-4 bg-white rounded-xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-700 mb-2">
-                รายได้ต่อ วัน / เดือน / ปี
-              </h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={grap} barGap={8}>
-                  <XAxis dataKey="month" tick={{ fill: "#6B7280" }} />
-                  <YAxis tick={{ fill: "#6B7280" }} />
-                  <Tooltip />
-
-                  <Bar
-                    dataKey="current"
-                    fill="#E11D48"
-                    barSize={20}
-                    radius={[10, 10, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          <div className=" grid grid-row-2 gap-4">
+          <div className=" grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-white text-black shadow-lg rounded-lg p-4">
               <p className="text-lg font-semibold">สินค้ายอดนิยม</p>
               <div className="overflow-x-auto">
