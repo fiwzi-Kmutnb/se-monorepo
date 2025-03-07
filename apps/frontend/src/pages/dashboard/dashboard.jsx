@@ -61,7 +61,6 @@ const yearlyData = [
   { year: "2024", total: 8000, current: 5000 },
 ];
 
-// สร้างข้อมูลรายวัน
 const generateDailyData = () => {
   const months = [
     "JAN",

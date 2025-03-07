@@ -17,48 +17,48 @@ function LoginPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 min-h-screen">
+    <div className="grid grid-cols-1 md:grid-cols-5 min-h-screen bg-[#FFFAFA]">
       <div className="flex items-center col-span-3 justify-center p-8">
         <form onSubmit={handleSubmit} className="w-full max-w-md space-y-20">
           <h1 className="text-4xl font-semibold text-black text-center">
             ยินดีต้อนรับกลับมา!
           </h1>
           {error && <p className="text-red-500 text-center">{error}</p>}
-      
-         <div className="space-y-6">
-         <div>
-            <label className="block text-black mb-1">อีเมล</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="กรอกอีเมลของท่าน"
-              className="w-full p-3 border rounded-lg bg-[#F3F3F3] focus:outline-none"
-            />
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-black mb-1">อีเมล</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="กรอกอีเมลของท่าน"
+                className="w-full p-3 border rounded-lg bg-[#F3F3F3] focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-black mb-1">รหัสผ่าน</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="กรอกรหัสผ่านของท่าน"
+                className="w-full p-3 border rounded-lg bg-[#F3F3F3] focus:outline-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-[#C43D2B] text-white py-3 rounded-lg hover:bg-red-700 transition duration-300"
+            >
+              เข้าสู่ระบบ
+            </button>
+
+            <p className="text-center text-[#F93F5F] cursor-pointer hover:underline">
+              ลืมรหัสผ่านใช่หรือไม่? คลิกที่นี่
+            </p>
           </div>
-
-          <div>
-            <label className="block text-black mb-1">รหัสผ่าน</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="กรอกรหัสผ่านของท่าน"
-              className="w-full p-3 border rounded-lg bg-[#F3F3F3] focus:outline-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-[#C43D2B] text-white py-3 rounded-lg hover:bg-red-700 transition duration-300"
-          >
-            เข้าสู่ระบบ
-          </button>
-
-          <p className="text-center text-[#F93F5F] cursor-pointer hover:underline">
-            ลืมรหัสผ่านใช่หรือไม่? คลิกที่นี่
-          </p>
-         </div>
         </form>
       </div>
 
