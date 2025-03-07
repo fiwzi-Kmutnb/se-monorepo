@@ -1,18 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import { Extractmessage, Linemessage, Sendmessage } from '../chat.entity';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  Extractmessage,
+  Linemessage,
+  Profile,
+  Sendmessage,
+} from '../chat.entity';
 import { ResponseIO } from 'src/types/interfaces';
 import { PrismaService } from '@se/prisma';
 import { HTTPException } from '@se/customfilter';
-import axios from 'axios';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { ChatRestrictedGateway } from './chat.restricted.gateway';
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class ChatRestrictedService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly httpService: HttpService,
+    @Inject(forwardRef(() => ChatRestrictedGateway))
+    private readonly chatgateway: ChatRestrictedGateway,
+  ) {}
 
   async HookMessageService(data: Linemessage): Promise<ResponseIO> {
     try {
       for (const event of data.events) {
-        if (event.type === 'message' && event.message.type === 'text') {
+        if (event.type === 'message' && event.message?.type === 'text') {
           const extractmessage: Extractmessage = {
             message: event.message.text,
             type: event.message.type,
@@ -22,85 +35,117 @@ export class ChatRestrictedService {
             type: event.source.type,
           };
 
-          const customerInfo = await axios
-            .get('https://api.line.me/v2/bot/profile/' + user.userId, {
-              headers: {
-                Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`,
-              },
-            })
-            .catch(() => {
-              throw new HTTPException({
-                message: 'เกิดข้อผิดพลาด',
-              });
-            });
+          try {
+            const res = await firstValueFrom(
+              this.httpService.get<Profile>(
+                'https://api.line.me/v2/bot/profile/' + user.userId,
+                {
+                  headers: {
+                    Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS}`,
+                  },
+                },
+              ),
+            );
 
-          await this.prismaService.customer
-            .upsert({
+            await this.prismaService.customer.upsert({
               where: {
                 UserID: user.userId,
               },
               update: {},
               create: {
                 UserID: user.userId,
-                displayName: customerInfo.data.displayName,
-                pictureUrl: customerInfo.data.pictureUrl,
+                displayName: res.data.displayName,
+                pictureUrl: res.data.pictureUrl,
               },
-            })
-            .catch(() => {
-              throw new HTTPException({
-                message: 'เกิดข้อผิดพลาด',
-              });
             });
 
-          this.StoreReplyTokenService(event.source.userId, event.replyToken);
+            await this.prismaService.replyToken.create({
+              data: {
+                token: event.replyToken,
+                customer: { connect: { UserID: user.userId } },
+              },
+            });
+
+            const chatData = await this.prismaService.chat.findUnique({
+              where: { cusID: user.userId },
+              select: { data: true },
+            });
+
+            const prevMessages = chatData?.data || [];
+
+            await this.prismaService.chat.upsert({
+              where: {
+                cusID: user.userId,
+              },
+              update: {
+                data: [
+                  ...(Array.isArray(prevMessages) ? prevMessages : []),
+                  { text: extractmessage.message, timestamp: new Date() },
+                ],
+              },
+              create: {
+                customer: { connect: { UserID: user.userId } },
+                data: [{ text: extractmessage.message, timestamp: new Date() }],
+                monthAt: new Date(),
+              },
+            });
+          } catch {
+            throw new HTTPException({
+              message: 'เกิดข้อผิดพลาด',
+            });
+          }
+
+          this.chatgateway.sendMessageToClient(
+            extractmessage.message,
+            user.userId,
+          );
 
           return {
             event: 'message',
             message: 'Receive Message ',
             data: extractmessage,
             type: 'SUCCESS',
-            //   timestamp: new Date().toISOString(),
+            timestamp: new Date().toISOString(),
           };
         }
       }
     } catch (error) {
+      console.log(error);
       throw new HTTPException({
         message: 'เกิดข้อผิดพลาด',
       });
     }
   }
 
-  private async StoreReplyTokenService(userid: string, tokenreply: string) {
-    await this.prismaService.replyToken.create({
-      data: {
-        cusID: userid,
-        token: tokenreply,
-        status: 'ACTIVE',
-      },
-    });
-  }
-
-  async SendMessageService(data: Sendmessage): Promise<ResponseIO> {
+  async SendMessageService(
+    data: Sendmessage,
+    req: Socket,
+  ): Promise<ResponseIO> {
     try {
-      const replyToken = await this.prismaService.replyToken.findFirst({
-        where: {
-          OR: [
-            {
-              status: 'ACTIVE',
-            },
-          ],
-          cusID: data.userID,
-        },
+      const user = await this.prismaService.users.findFirst({
+        where: { id: req.users.id },
       });
 
-      if (!replyToken) {
+      if (!user) {
         throw new HTTPException({
           message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
         });
       }
 
-      await axios
-        .post(
+      // const replyToken = await this.prismaService.replyToken.findFirst({
+      //   where: {
+      //     customer: { UserID: data.userID },
+      //   },
+      // });
+
+      // if (!replyToken) {
+      //   throw new HTTPException({
+      //     message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
+      //   });
+      // }
+
+      await firstValueFrom(
+        this.httpService.post(
           'https://api.line.me/v2/bot/message/push',
           {
             to: data.userID,
@@ -109,22 +154,27 @@ export class ChatRestrictedService {
           {
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`,
+              Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS}`,
             },
           },
-        )
-        .catch(() => {
-          throw new HTTPException({
-            message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
-          });
+        ),
+      ).catch(() => {
+        throw new HTTPException({
+          message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
         });
+      });
 
-      await this.prismaService.replyToken.update({
-        where: {
-          id: replyToken.id,
-        },
+      // await this.prismaService.replyToken.delete({
+      //   where: {
+      //     id: replyToken.id,
+      //   },
+      // });
+
+      await this.prismaService.logChat.create({
         data: {
-          status: 'USED',
+          user: { connect: { id: req.users.id } },
+          message: data.message,
+          IP: req.handshake.address,
         },
       });
 

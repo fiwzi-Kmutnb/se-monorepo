@@ -47,18 +47,6 @@ enum StatusDeliveryTokens {
   ERROR
 }
 
-enum ActionRole {
-  CREATE
-  EDIT
-  DELETE
-}
-
-enum ActionMember {
-  CREATE
-  EDIT
-  DELETE
-}
-
 enum StatusPayment {
   FAILED
   SUCCESS
@@ -77,6 +65,18 @@ enum ActionStock {
   DELETE
   ENABLE
   DISABLE
+}
+
+enum ActionRole {
+  CREATE
+  EDIT
+  DELETE
+}
+
+enum ActionMember {
+  CREATE
+  EDIT
+  DELETE
 }
 
 enum ActionLogin {
@@ -98,34 +98,39 @@ enum StatusLogin {
 }
 
 model users {
-  id           Int            @id @default(autoincrement())
-  email        String         @unique
-  profile_img  String?
-  password     String
-  username     String
-  role         role           @relation("UserRole", fields: [roleId], references: [id])
-  roleId       Int
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  deletedAt    DateTime?
-  Order        order[]
-  emailTokens  emailTokens[]
-  logLogin     logLogin[]
-  logRole      logRole[]      @relation("actionBy")
-  logMember    logMember[]    @relation("actionBy")
-  logBroadcast logBroadcast[] @relation("actionBy")
-  logStock     logStock[]
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  profile_img String
+  password    String
+  username    String
+  role        role          @relation("UserRole", fields: [roleId], references: [id])
+  roleId      Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  Order       order[]
+  emailTokens emailTokens[]
+
+  createdRoles   role[]         @relation("CreatedByUsers")
+  logLogin       logLogin[]
+  logRole        logRole[]      @relation("actionBy")
+  logRoleGetuser logRole[]      @relation("getuser")
+  logStock       logStock[]
+  logChat        logChat[]
+  logMember      logMember[]    @relation("actionBy")
+  logBroadcast   logBroadcast[] @relation("actionBy")
 }
 
 model role {
-  id         Int       @id @default(autoincrement())
-  name       String    @unique
-  permission Int
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  permission  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdby   users?   @relation("CreatedByUsers", fields: [createdbyId], references: [id])
+  createdbyId Int?
 
-  users users[] @relation("UserRole")
+  usersRole users[] @relation("UserRole")
 }
 
 model order {
@@ -231,15 +236,16 @@ model logLogin {
 }
 
 model logRole {
-  id         Int        @id @default(autoincrement())
-  actionBy   users      @relation("actionBy", fields: [actionById], references: [id])
+  id         Int      @id @default(autoincrement())
+  user       users    @relation("getuser", fields: [userId], references: [id])
+  userId     Int
+  action     String
+  before     String
+  after      String
+  actionBy   users    @relation("actionBy", fields: [actionById], references: [id])
   actionById Int
-  namerole   String?
-  action     ActionRole
-  before     String?
-  after      String?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model logMember {
@@ -272,14 +278,33 @@ model customer {
   pictureUrl  String?
   Order       order[]
   replyToken  replyToken[]
+  chat        chat[]
 }
 
 model replyToken {
-  id        Int               @id @default(autoincrement())
-  customer  customer          @relation(fields: [cusID], references: [UserID])
+  id        Int      @id @default(autoincrement())
+  customer  customer @relation(fields: [cusID], references: [UserID])
   cusID     String
   token     String
-  status    StatusReplyTokens @default(ACTIVE)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model chat {
+  id        Int      @id @default(autoincrement())
+  customer  customer @relation(fields: [cusID], references: [UserID])
+  cusID     String   @unique
+  data      Json?
+  monthAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model logChat {
+  id        Int      @id @default(autoincrement())
+  user      users    @relation(fields: [userId], references: [id])
+  userId    Int
+  message   String
+  IP        String
+  createdAt DateTime @default(now())
 }

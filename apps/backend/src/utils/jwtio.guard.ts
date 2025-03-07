@@ -17,9 +17,9 @@ export class WsGuard implements CanActivate {
     const client: Socket = context.switchToWs().getClient<Socket>();
     const token = client.handshake.headers.authorization?.split(' ')[1];
 
-    if (!token) {
-      throw new UnauthorizedException();
-    }
+    // if (!token) {
+    //   throw new UnauthorizedException();
+    // }
 
     try {
       const decoded = this.jwtService.verify(token, {
@@ -28,7 +28,7 @@ export class WsGuard implements CanActivate {
       client.users = decoded;
       return true;
     } catch (error) {
-      throw new UnauthorizedException();
+      // throw new UnauthorizedException();
     }
   }
 }

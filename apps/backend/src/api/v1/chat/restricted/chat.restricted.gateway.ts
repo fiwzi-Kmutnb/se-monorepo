@@ -10,7 +10,13 @@ import {
 import { Socket, Server } from 'socket.io';
 import { ChatRestrictedService } from './chat.restricted.service';
 import { Sendmessage } from '../chat.entity';
-import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { WsGuard } from 'src/utils/jwtio.guard';
 import { TransformInterceptor } from '@se/custominterceptor';
 import {
@@ -19,21 +25,34 @@ import {
 } from '@se/customfilter/dist/custom';
 
 @WebSocketGateway({ namespace: 'chat' })
+
 // @UseFilters(AllWsExceptionsFilter)
 export class ChatRestrictedGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  private clients = new Set<Socket>();
+
   @WebSocketServer() server: Server;
-  constructor(private readonly chatrestrictedservice: ChatRestrictedService) {}
-  handleConnection(client: Socket) {
+  constructor(
+    @Inject(forwardRef(() => ChatRestrictedService))
+    private readonly chatrestrictedservice: ChatRestrictedService,
+  ) {}
+
+  handleConnection(@ConnectedSocket() client: Socket) {
     console.log(`Client connected: ${client.id}`);
+    this.clients.add(client);
   }
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
+    this.clients.delete(client);
   }
 
-  // @UseGuards(WsGuard)
+  sendMessageToClient(message: string, cusID: string) {
+    this.server.emit('new-message', { cusID, message });
+  }
+
+  @UseGuards(WsGuard)
   // @UseInterceptors(TransformInterceptor)
   @SubscribeMessage('sendmessage')
   handleMessage(
@@ -42,7 +61,7 @@ export class ChatRestrictedGateway
   ) {
     client.emit(
       'sendmessage',
-      this.chatrestrictedservice.SendMessageService(payload),
+      this.chatrestrictedservice.SendMessageService(payload, client),
     );
   }
 }
