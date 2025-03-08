@@ -265,3 +265,27 @@ model logBroadcast {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 }
+
+enum StatusReplyTokens {
+   ACTIVE
+   USED
+   EXPIRED
+   ERROR
+ }
+
+model replyToken {
+   id        Int               @id @default(autoincrement())
+   customer  customerLine          @relation(fields: [cusID], references: [UserID])
+   cusID     String
+   token     String
+   status    StatusReplyTokens @default(ACTIVE)
+   createdAt DateTime          @default(now())
+   updatedAt DateTime          @updatedAt
+ }
+ model customerLine {
+   UserID      String       @unique
+   displayName String
+   pictureUrl  String?
+  //  Order       order[]
+   replyToken  replyToken[]
+ }

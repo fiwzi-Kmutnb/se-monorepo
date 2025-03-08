@@ -16,6 +16,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { ProductModule } from './api/v1/product/product.module';
 import { BroadcastModule } from './api/v1/broadcast/broadcast.module';
 import { join } from 'path';
+import { ChatModule } from './api/v1/chat/chat.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { join } from 'path';
     PermissionModule,
     ProductModule,
     BroadcastModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
