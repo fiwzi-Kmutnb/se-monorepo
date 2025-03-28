@@ -24,6 +24,13 @@ enum StatusOrder {
   ERROR
 }
 
+enum StatusReplyTokens {
+  ACTIVE
+  USED
+  EXPIRED
+  ERROR
+}
+
 enum StatusEmailTokens {
   PENDING
   VERIFIED
@@ -38,18 +45,6 @@ enum StatusDeliveryTokens {
   DELIVERED
   REJECTED
   ERROR
-}
-
-enum ActionRole {
-  CREATE
-  EDIT
-  DELETE
-}
-
-enum ActionMember {
-  CREATE
-  EDIT
-  DELETE
 }
 
 enum StatusPayment {
@@ -72,6 +67,18 @@ enum ActionStock {
   DISABLE
 }
 
+enum ActionRole {
+  CREATE
+  EDIT
+  DELETE
+}
+
+enum ActionMember {
+  CREATE
+  EDIT
+  DELETE
+}
+
 enum ActionLogin {
   Login
   FORGOTPASSWORD
@@ -91,23 +98,25 @@ enum StatusLogin {
 }
 
 model users {
-  id           Int            @id @default(autoincrement())
-  email        String         @unique
-  profile_img  String?
-  password     String
-  username     String
-  role         role           @relation("UserRole", fields: [roleId], references: [id])
-  roleId       Int
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  deletedAt    DateTime?
-  Order        order[]
-  emailTokens  emailTokens[]
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  profile_img String?
+  password    String
+  username    String
+  role        role          @relation("UserRole", fields: [roleId], references: [id])
+  roleId      Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  Order       order[]
+  emailTokens emailTokens[]
+
   logLogin     logLogin[]
+  logStock     logStock[]
+  logChat      logChat[]
   logRole      logRole[]      @relation("actionBy")
   logMember    logMember[]    @relation("actionBy")
   logBroadcast logBroadcast[] @relation("actionBy")
-  logStock     logStock[]
 }
 
 model role {
@@ -123,8 +132,8 @@ model role {
 
 model order {
   id              Int             @id @default(autoincrement())
-  user            users           @relation(fields: [userId], references: [id])
-  userId          Int
+  user            users?          @relation(fields: [userId], references: [id])
+  userId          Int?
   Customer        customer        @relation(fields: [customer_Lineid], references: [UserID])
   customer_Lineid String
   orderlist       Json
@@ -133,8 +142,8 @@ model order {
   totalprice      Float
   quantity        Int
   status          StatusOrder
-  payments        payment         @relation(fields: [paymentId], references: [id])
-  paymentId       Int
+  payments        payment?        @relation(fields: [paymentId], references: [id])
+  paymentId       Int?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   deliveryToken   deliveryToken[]
@@ -176,13 +185,6 @@ model broadcast {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
-}
-
-model customer {
-  UserID      String  @unique
-  displayName String
-  pictureUrl  String?
-  Order       order[]
 }
 
 model emailTokens {
@@ -266,26 +268,39 @@ model logBroadcast {
   updatedAt        DateTime        @updatedAt
 }
 
-enum StatusReplyTokens {
-   ACTIVE
-   USED
-   EXPIRED
-   ERROR
- }
+model customer {
+  UserID      String       @unique
+  displayName String
+  pictureUrl  String?
+  Order       order[]
+  replyToken  replyToken[]
+  chat        chat[]
+}
 
 model replyToken {
-   id        Int               @id @default(autoincrement())
-   customer  customerLine          @relation(fields: [cusID], references: [UserID])
-   cusID     String
-   token     String
-   status    StatusReplyTokens @default(ACTIVE)
-   createdAt DateTime          @default(now())
-   updatedAt DateTime          @updatedAt
- }
- model customerLine {
-   UserID      String       @unique
-   displayName String
-   pictureUrl  String?
-  //  Order       order[]
-   replyToken  replyToken[]
- }
+  id        Int      @id @default(autoincrement())
+  customer  customer @relation(fields: [cusID], references: [UserID])
+  cusID     String
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model chat {
+  id        Int      @id @default(autoincrement())
+  customer  customer @relation(fields: [cusID], references: [UserID])
+  cusID     String   @unique
+  data      Json?
+  monthAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model logChat {
+  id        Int      @id @default(autoincrement())
+  user      users    @relation(fields: [userId], references: [id])
+  userId    Int
+  message   String
+  IP        String
+  createdAt DateTime @default(now())
+}
