@@ -12,7 +12,7 @@ import {
   WsExceptionFilter,
 } from "@nestjs/common";
 import { HttpAdapterHost } from "@nestjs/core";
-import { WsException } from "@nestjs/websockets";
+import { BaseWsExceptionFilter, WsException } from "@nestjs/websockets";
 
 type type = "SUCCESS" | "ERROR" | "WARNING" | "WAIT";
 interface response {
@@ -106,41 +106,42 @@ export class HTTPException extends Error {
     this.type = res.type ?? "ERROR";
   }
 }
-@Catch(WsException)
-export class AllWsExceptionsFilter implements WsExceptionFilter {
-  catch(exception: WSException, host: ArgumentsHost) {
-    const client = host.switchToWs().getClient();
-    const data = exception.getError();
-    let response: responseIO = {
-      message: exception.message,
-      type: "WARNING",
-      timestamp: new Date().toISOString(),
-    };
-    response.message = data.message;
-    response.type = data.type;
-    client.emit("MsgError", {
-      message: response.message,
-      data: response.data,
-      type: response.type,
-      timestamp: response.timestamp,
-    });
-  }
-}
 
-export class WSException extends Error {
-  public readonly type: type;
+export class WSException extends WsException {
+  public readonly type: string;
+  public readonly message: string;
+
   constructor(res: responseIO) {
-    super();
+    super(res);
     this.message = res.message;
-    this.type = res.type ?? "ERROR";
+    this.type = res.type ?? 'ERROR';
   }
-  initMessage(): void {
-    this.message = this.message as string;
-  }
-  getError(): responseIO {
+
+  override getError() {
     return {
       message: this.message,
       type: this.type,
     };
+  }
+}
+@Catch(WSException)
+export class AllWsExceptionsFilter implements WsExceptionFilter  {
+  catch(exception: WSException, host: ArgumentsHost) {
+    const client = host.switchToWs().getClient();
+    const error = typeof exception.getError === 'function'
+      ? exception.getError()
+      : { message: exception.message, type: 'ERROR' };
+
+    const response: responseIO = {
+      message: error.message ?? 'Unknown error',
+      type: (['SUCCESS', 'ERROR', 'WARNING', 'WAIT'] as const).includes(error.type as type) ? (error.type as type) : 'ERROR',
+      timestamp: new Date().toISOString(),
+    };
+
+    client.emit('MsgError', {
+      message: response.message,
+      type: response.type,
+      timestamp: response.timestamp,
+    });
   }
 }

@@ -6,6 +6,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { ChatRestrictedService } from './chat.restricted.service';
@@ -15,17 +16,14 @@ import {
   Inject,
   UseFilters,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
-import { TransformInterceptor } from '@se/custominterceptor';
 import {
   AllWsExceptionsFilter,
-  WSException,
+  WSException
 } from '@se/customfilter/dist/custom';
 import { WsGuard } from 'src/utils/jwtio.guard';
 
 @WebSocketGateway({ namespace: 'chat' })
-// @UseFilters(AllWsExceptionsFilter)
 export class ChatRestrictedGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -59,14 +57,13 @@ export class ChatRestrictedGateway
     return client;
   }
 
-  // @UseGuards(WsGuard)
-  // @UseInterceptors(TransformInterceptor)
+  @UseGuards(WsGuard)
+  @UseFilters(AllWsExceptionsFilter)
   @SubscribeMessage('sendmessage')
   handleMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: Sendmessage,
   ) {
-    console.log(client.users);
     client.emit(
       'sendmessage',
       this.chatrestrictedservice.SendMessageService(payload, client),

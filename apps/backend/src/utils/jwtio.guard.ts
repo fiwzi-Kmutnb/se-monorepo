@@ -2,11 +2,13 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  UnauthorizedException,
   // UnauthorizedException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
+import { WSException } from '@se/customfilter/dist/custom';
 
 @Injectable()
 export class WsGuard implements CanActivate {
@@ -18,20 +20,24 @@ export class WsGuard implements CanActivate {
     const token = client.handshake.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      // throw new UnauthorizedException();
+      throw new WSException({
+        message: 'Token not found',
+        type: 'ERROR',
+      });
     }
 
     try {
       const decoded = this.jwtService.verify(token, {
         secret: process.env.SECRET_KEY,
       });
-    
       client.users = decoded;
       console.log(client.users);
       return true;
     } catch (error) {
-      return false;
-      // throw new UnauthorizedException();
+      throw new WSException({
+        message: 'Unauthorized',
+        type: 'ERROR',
+      });
     }
   }
 }
