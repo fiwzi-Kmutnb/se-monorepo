@@ -84,99 +84,95 @@ export class ChatRestrictedService {
     });
   }
 
-  async HookMessageService(data: Linemessage): Promise<ResponseIO> {
+  async HookMessageService(data: Linemessage) {
     try {
       for (const event of data.events) {
+        if (
+          !['text', 'image'].includes(event.message?.type) ||
+          event.message?.text == '1' ||
+          event.message?.text == 'Menu' ||
+          event.message?.text == 'Payment'
+        ) {
+          return;
+        }
+        await firstValueFrom(
+          this.httpService.get<Profile>(
+            'https://api.line.me/v2/bot/profile/' + event.source.userId,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS}`,
+              },
+            },
+          ),
+        ).then(async (res) => {
+          await this.prismaService.customer.upsert({
+            where: {
+              UserID: event.source.userId,
+            },
+            update: {
+              displayName: res.data.displayName,
+              pictureUrl: res.data.pictureUrl,
+            },
+            create: {
+              UserID: event.source.userId,
+              displayName: res.data.displayName,
+              pictureUrl: res.data.pictureUrl,
+            },
+          });
+        });
+        const user = {
+          userId: event.source.userId,
+          type: event.source.type,
+        };
         if (event.type === 'message' && event.message?.type === 'text') {
           const extractmessage: Extractmessage = {
             message: event.message.text,
             type: event.message.type,
           };
-          const user = {
-            userId: event.source.userId,
-            type: event.source.type,
-          };
+          const chatData = await this.prismaService.chat.findUnique({
+            where: { cusID: user.userId },
+            select: { data: true },
+          });
+          const prevMessages = chatData?.data || [];
+          await this.prismaService.chat.upsert({
+            where: {
+              cusID: user.userId,
+            },
+            update: {
+              data: [
+                ...(Array.isArray(prevMessages) ? prevMessages : []),
+                {
+                  text: extractmessage.message,
+                  typeSender: 'self',
+                  type: 'text',
+                  timestamp: new Date(),
+                },
+              ],
+            },
+            create: {
+              customer: { connect: { UserID: user.userId } },
+              data: [
+                {
+                  text: extractmessage.message,
+                  typeSender: 'self',
+                  type: 'text',
+                  timestamp: new Date(),
+                },
+              ],
+              monthAt: new Date(),
+            },
+          });
 
-          if (/^- ?แซนวิช /.test(extractmessage.message)) {
+          if (/^- ?แซนวิช/.test(extractmessage.message)) {
             this.OrderProcessingService(user.userId, extractmessage.message);
           } else if (/^\s*(ยืนยัน|แก้ไข|ยกเลิก)/.test(extractmessage.message)) {
             this.OrderHandleService(user.userId, this.orders);
-          } else {
-            try {
-              const res = await firstValueFrom(
-                this.httpService.get<Profile>(
-                  'https://api.line.me/v2/bot/profile/' + user.userId,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS}`,
-                    },
-                  },
-                ),
-              );
-
-              await this.prismaService.customer.upsert({
-                where: {
-                  UserID: user.userId,
-                },
-                update: {},
-                create: {
-                  UserID: user.userId,
-                  displayName: res.data.displayName,
-                  pictureUrl: res.data.pictureUrl,
-                },
-              });
-
-              // await this.prismaService.replyToken.create({
-              //   data: {
-              //     token: event.replyToken,
-              //     customer: { connect: { UserID: user.userId } },
-              //   },
-              // });
-
-              const chatData = await this.prismaService.chat.findUnique({
-                where: { cusID: user.userId },
-                select: { data: true },
-              });
-
-              const prevMessages = chatData?.data || [];
-
-              await this.prismaService.chat.upsert({
-                where: {
-                  cusID: user.userId,
-                },
-                update: {
-                  data: [
-                    ...(Array.isArray(prevMessages) ? prevMessages : []),
-                    { text: extractmessage.message, timestamp: new Date() },
-                  ],
-                },
-                create: {
-                  customer: { connect: { UserID: user.userId } },
-                  data: [
-                    { text: extractmessage.message, timestamp: new Date() },
-                  ],
-                  monthAt: new Date(),
-                },
-              });
-            } catch {
-              throw new HTTPException({
-                message: 'เกิดข้อผิดพลาด',
-              });
-            }
-
-            this.chatgateway.sendMessageToClient(
-              extractmessage.message,
-              user.userId,
-            );
-
-            return {
-              event: 'message',
-              message: 'Receive Message ',
-              data: extractmessage,
-              type: 'SUCCESS',
-              timestamp: new Date().toISOString(),
-            };
           }
+          this.chatgateway.sendMessageToClient(
+            extractmessage.message,
+            user.userId,
+            'text',
+          );
         } else if (
           event.type === 'message' &&
           event.message?.type === 'image'
@@ -198,42 +194,46 @@ export class ChatRestrictedService {
             ),
           )
             .then(async (res) => {
-              // this.PushImageToLineService(
-              //   event.source.userId,
-              //   `data:${res.headers['content-type']};base64,${Buffer.from(
-              //     res.data,
-              //   ).toString('base64')}`,
-              //   `data:${res.headers['content-type']};base64,${Buffer.from(
-              //     res.data,
-              //   ).toString('base64')}`,
-              // );
-              const filename = `${generate(30)}.${res.headers['content-type'].split('/')[1]}`;
-              // console.log(filename);
+              const filename = `${generate(30)}.$ {res.headers['content-type'].split('/')[1]}`;
               fs.writeFileSync(`./storage/slip/${filename}`, res.data);
-              // const files = `data:${res.headers['content-type']};base64,${Buffer.from(
-              await this.httpService.post(
-                'https://api.line.me/v2/bot/message/push',
-                {
-                  to: event.source.userId,
-                  messages: [
+              this.chatgateway.sendMessageToClient(
+                filename,
+                event.source.userId,
+                'image',
+              );
+              const chatData = await this.prismaService.chat.findUnique({
+                where: { cusID: user.userId },
+                select: { data: true },
+              });
+              const prevMessages = chatData?.data || [];
+              await this.prismaService.chat.upsert({
+                where: {
+                  cusID: user.userId,
+                },
+                update: {
+                  data: [
+                    ...(Array.isArray(prevMessages) ? prevMessages : []),
                     {
+                      text: filename,
+                      typeSender: 'self',
                       type: 'image',
-                      originalContentUrl: `data:${res.headers['content-type']};base64,${Buffer.from(
-                        res.data,
-                      ).toString('base64')}`,
-                      previewImageUrl: `data:${res.headers['content-type']};base64,${Buffer.from(
-                        res.data,
-                      ).toString('base64')}`,
+                      timestamp: new Date(),
                     },
                   ],
                 },
-                {
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS}`,
-                  },
+                create: {
+                  customer: { connect: { UserID: user.userId } },
+                  data: [
+                    {
+                      text: filename,
+                      typeSender: 'self',
+                      type: 'image',
+                      timestamp: new Date(),
+                    },
+                  ],
+                  monthAt: new Date(),
                 },
-              );
+              });
             })
             .catch((e) => {
               console.log(e);
@@ -241,10 +241,7 @@ export class ChatRestrictedService {
         }
       }
     } catch (error) {
-      console.log(error);
-      throw new HTTPException({
-        message: 'เกิดข้อผิดพลาด',
-      });
+      return;
     }
   }
 
@@ -263,18 +260,6 @@ export class ChatRestrictedService {
           message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
         });
       }
-
-      // const replyToken = await this.prismaService.replyToken.findFirst({
-      //   where: {
-      //     customer: { UserID: data.userID },
-      //   },
-      // });
-
-      // if (!replyToken) {
-      //   throw new HTTPException({
-      //     message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
-      //   });
-      // }
 
       this.PushMessageToLineService(data.userID, data.message);
 
@@ -322,7 +307,6 @@ export class ChatRestrictedService {
         }
       })
       .filter(Boolean);
-
     this.PushMessageToLineService(
       customer,
       `รายการสั่งซื้อของคุณคือ\n${this.orders

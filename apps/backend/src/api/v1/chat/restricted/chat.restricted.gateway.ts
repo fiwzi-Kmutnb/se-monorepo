@@ -45,8 +45,8 @@ export class ChatRestrictedGateway
     this.clients.delete(client);
   }
 
-  sendMessageToClient(message: string, cusID: string) {
-    this.server.emit('new-message', { cusID, message });
+  sendMessageToClient(message: string, cusID: string, type: string) {
+    this.server.emit('new-message', { cusID, message, type });
   }
 
   sendOrderToClient(cusID: string, order: orderlist) {

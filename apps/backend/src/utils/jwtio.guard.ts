@@ -21,7 +21,7 @@ export class WsGuard implements CanActivate {
 
     if (!token) {
       throw new WSException({
-        message: 'Token not found',
+        message: 'กรุณาทำการเข้าสู่ระบบ',
         type: 'ERROR',
       });
     }
@@ -35,7 +35,7 @@ export class WsGuard implements CanActivate {
       return true;
     } catch (error) {
       throw new WSException({
-        message: 'Unauthorized',
+        message: 'กรุณาทำการเข้าสู่ระบบ',
         type: 'ERROR',
       });
     }

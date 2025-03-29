@@ -1,4 +1,3 @@
-import { Express } from 'express';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@se/prisma';
 import { Response } from 'src/types/interfaces';
