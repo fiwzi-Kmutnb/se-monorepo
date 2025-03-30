@@ -44,10 +44,6 @@ export class ChatRestrictedGateway
     this.server.emit('new-order', { cusID, order });
   }
 
-  // getClient(client: Socket): Socket {
-  //   return client;
-  // }
-
   @UseGuards(WsGuard)
   @UseFilters(AllWsExceptionsFilter)
   @SubscribeMessage('sendmessage')
