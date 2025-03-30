@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import Layout from "@/component/layout";
+import Layout from "@/components/layout";
 import Image from "next/image";
 import { FaCamera, FaPhotoVideo } from "react-icons/fa";
 

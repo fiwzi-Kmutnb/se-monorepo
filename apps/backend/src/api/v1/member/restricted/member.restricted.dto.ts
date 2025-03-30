@@ -23,27 +23,13 @@ const createMemberDTO = z.object({
     .email({
       message: 'กรุณากรอกอีเมลให้ถูกต้อง',
     }),
-  role: z.string({
+  role: z.number({
     message: 'กรุณาเลือกบทบาท',
   }),
 });
 
 const updateMemberDTO = z.object({
-  username: z
-    .string({
-      message: 'กรุณากรอกชื่อผู้ใช้',
-    })
-    .min(1, {
-      message: 'กรุณากรอกชื่อผู้ใช้',
-    }),
-  email: z
-    .string({
-      message: 'กรุณากรอกอีเมล',
-    })
-    .email({
-      message: 'กรุณากรอกอีเมลให้ถูกต้อง',
-    }),
-  role: z.string({
+  role: z.number({
     message: 'กรุณาเลือกบทบาท',
   }),
 });

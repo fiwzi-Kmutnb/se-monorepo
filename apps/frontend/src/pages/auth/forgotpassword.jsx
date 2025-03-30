@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 function forgotpassword() {
   return (
@@ -27,13 +28,16 @@ function forgotpassword() {
               ลืมรหัสผ่าน
             </button>
             <p className="text-center text-[#F93F5F] cursor-pointer hover:underline">
-              จำรหัสผ่านได้แล้ว? เข้าสู่ระบบเลย
+              
+            <Link href={"/auth/login"} >
+              รหัสผ่านได้แล้ว? เข้าสู่ระบบเลย
+            </Link>
             </p>
           </div>
         </form>
       </div>
 
-      <div className="bg-gradient-to-br from-[#FF6464] col-span-2 to-[#993C3C] rounded-3xl m-4 mr-[7%]  flex items-center justify-center">
+      <div className="bg-gradient-to-br from-[#FF6464] col-span-2 to-[#993C3C] rounded-3xl m-4 mr-[4%] max-md:hidden  flex items-center justify-center">
         <div className="text-center space-y-4 flex flex-col items-center justify-center p-8 ">
           <Image
             src="/assets/img/logo.svg"

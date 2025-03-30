@@ -18,6 +18,7 @@ body {
   padding: 6px 14px;
   z-index: 99;
   transition: all 0.5s ease;
+  box-shadow: #00000048 0px 0px 10px 0px;
 }
 .sidebar.open{
   width: 250px;
@@ -64,8 +65,8 @@ body {
 }
 .sidebar svg{
   color: #000;
-  height: 60px;
-  min-width: 40px;
+  height: 40px;
+  min-width: 30px;
   text-align: center;
 }
 .sidebar .nav-list{
@@ -90,12 +91,17 @@ body {
 .sidebar li a:hover{
   background: #2B2D42;
 }
-.sidebar li a.active{
+.sidebar li a.active {
   background: #2B2D42;
+}
+.sidebar li a.active svg,
+.sidebar li a.active .links_name {
+  background: #2B2D42;
+  color: #fff;
 }
 .sidebar li a .links_name{
   color: #999999;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
   white-space: nowrap;
   opacity: 0;
@@ -113,9 +119,9 @@ body {
 }
 .sidebar li svg{
   color: #999999;
-  height: 50px;
+  height: 40px;
   line-height: 50px;
-  font-size: 18px;
+  font-size: 15px;
   border-radius: 12px;
 }
 .sidebar li.profile{
@@ -160,9 +166,9 @@ body {
   position: relative;
   min-height: 100vh;
   top: 0;
-  left: 250px;
+  left: 78px;
   z-index: 0;
-  width: calc(100% - 250px);
+  width: calc(100% - 78px);
   /* width: calc(100% - 78px); */
 }
 

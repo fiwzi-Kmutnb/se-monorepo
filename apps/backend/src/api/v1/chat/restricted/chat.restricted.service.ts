@@ -162,7 +162,8 @@ export class ChatRestrictedService {
               monthAt: new Date(),
             },
           });
-
+          console.log(extractmessage.message);
+          console.log(/^- ?แซนวิช/.test(extractmessage.message));
           if (/^- ?แซนวิช/.test(extractmessage.message)) {
             this.OrderProcessingService(user.userId, extractmessage.message);
           } else if (/^\s*(ยืนยัน|แก้ไข|ยกเลิก)/.test(extractmessage.message)) {
