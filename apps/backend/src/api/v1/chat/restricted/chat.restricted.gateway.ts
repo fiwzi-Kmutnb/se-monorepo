@@ -6,21 +6,12 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsException,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { ChatRestrictedService } from './chat.restricted.service';
 import { orderlist, Sendmessage } from '../chat.entity';
-import {
-  forwardRef,
-  Inject,
-  UseFilters,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  AllWsExceptionsFilter,
-  WSException
-} from '@se/customfilter/dist/custom';
+import { forwardRef, Inject, UseFilters, UseGuards } from '@nestjs/common';
+import { AllWsExceptionsFilter } from '@se/customfilter/dist/custom';
 import { WsGuard } from 'src/utils/jwtio.guard';
 
 @WebSocketGateway({ namespace: 'chat' })
@@ -53,9 +44,9 @@ export class ChatRestrictedGateway
     this.server.emit('new-order', { cusID, order });
   }
 
-  getClient(client: Socket): Socket {
-    return client;
-  }
+  // getClient(client: Socket): Socket {
+  //   return client;
+  // }
 
   @UseGuards(WsGuard)
   @UseFilters(AllWsExceptionsFilter)
