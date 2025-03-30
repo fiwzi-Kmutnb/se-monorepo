@@ -40,8 +40,8 @@ export class ChatRestrictedGateway
     this.server.emit('new-message', { cusID, message, type });
   }
 
-  sendOrderToClient(cusID: string, order: orderlist) {
-    this.server.emit('new-order', { cusID, order });
+  sendOrderToClient(cusID: string, order: orderlist, contact: string[]) {
+    this.server.emit('new-order', { cusID, order, contact });
   }
 
   @UseGuards(WsGuard)

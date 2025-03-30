@@ -26,7 +26,10 @@ export class ChatRestrictedService {
   ) {}
 
   orders: orderlist = [];
-  contact: string[] = [];
+  contact: { address: string; phone: string } = {
+    address: '',
+    phone: '',
+  };
 
   private async PushMessageToLineService(userID: string, ...texts: string[]) {
     const messages = texts
@@ -346,12 +349,8 @@ export class ChatRestrictedService {
       return;
     }
 
-    this.contact.push(
-      JSON.stringify({
-        address,
-        phone,
-      }),
-    );
+    this.contact.address = address;
+    this.contact.phone = phone;
 
     this.PushMessageToLineService(
       customer,
@@ -417,8 +416,12 @@ export class ChatRestrictedService {
   ): Promise<void> {
     if (order.length === 0) {
       this.PushMessageToLineService(customerID, 'ไม่พบรายการอาหารที่คุณสั่ง');
+      return;
     } else {
-      this.chatgateway.sendOrderToClient(customerID, this.orders);
+      this.chatgateway.sendOrderToClient(customerID, this.orders, [
+        this.contact.address,
+        this.contact.phone,
+      ]);
       this.PushMessageToLineService(
         customerID,
         `รับรายการสั่งซื้อของคุณเรียบร้อยแล้ว`,
@@ -441,8 +444,8 @@ export class ChatRestrictedService {
         quantity: this.orders
           .map((order) => order.quantity)
           .reduce((a, b) => a + b, 0),
-        address: this.contact[0] || null,
-        phone: this.contact[0] || null,
+        address: this.contact.address || null,
+        phone: this.contact.phone || null,
         createdAt: new Date(),
         totalprice:
           this.orders
