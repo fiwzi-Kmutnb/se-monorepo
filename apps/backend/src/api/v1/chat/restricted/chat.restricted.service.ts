@@ -26,6 +26,7 @@ export class ChatRestrictedService {
   ) {}
 
   orders: orderlist = [];
+  contact: string[] = [];
 
   private async PushMessageToLineService(userID: string, ...texts: string[]) {
     const messages = texts
@@ -165,8 +166,20 @@ export class ChatRestrictedService {
 
           if (/^- ?แซนวิช/.test(extractmessage.message)) {
             this.OrderProcessingService(user.userId, extractmessage.message);
-          } else if (/^\s*(ยืนยัน|แก้ไข|ยกเลิก)/.test(extractmessage.message)) {
-            this.OrderHandleService(user.userId, this.orders);
+          } else if (/^ที่อยู่/.test(extractmessage.message)) {
+            this.AddressProcessingService(user.userId, extractmessage.message);
+          } else if (/^\s*(ยืนยัน|ยกเลิก)\s*$/.test(extractmessage.message)) {
+            if (
+              /ยกเลิก/.test(extractmessage.message) &&
+              this.orders.length > 0
+            ) {
+              this.PushMessageToLineService(
+                user.userId,
+                'ยกเลิกการสั่งซื้อเรียบร้อยแล้ว',
+              );
+            } else {
+              this.OrderHandleService(user.userId, this.orders);
+            }
           }
           this.chatgateway.sendMessageToClient(
             extractmessage.message,
@@ -290,6 +303,93 @@ export class ChatRestrictedService {
     }
   }
 
+  private async AddressProcessingService(
+    customer: string,
+    data: string,
+  ): Promise<void> {
+    const cleanedLines = data
+      .trim()
+      .split('\n')
+      .map((line) => line.trim());
+
+    const phoneRegex = /เบอร์\s?(.+)/;
+    const addressRegex = /ที่อยู่\s?(.+)/;
+
+    const phoneMatch = cleanedLines.find((line) => phoneRegex.test(line));
+    const addressMatch = cleanedLines.find((line) => addressRegex.test(line));
+
+    const phone = phoneMatch ? phoneMatch.match(phoneRegex)?.[1] : null;
+    const address = addressMatch
+      ? addressMatch.match(addressRegex)?.[1]?.trim()
+      : null;
+
+    // console.log('📌 ตรวจสอบข้อมูล:', { address, phone });
+
+    if (this.orders.length === 0) {
+      // this.PushMessageToLineService(customer, 'ไม่พบรายการอาหารที่คุณสั่ง');
+      this.PushMessageToLineService(customer, 'พ่อมึงตายหรอไอโง่');
+      return;
+    }
+
+    if (!address || !phone) {
+      this.PushMessageToLineService(
+        customer,
+        'กรุณาระบุที่อยู่หรือเบอร์โทรศัพท์ของคุณให้ถูกต้อง',
+      );
+      return;
+    }
+
+    if (!/^\d{10}$/.test(phone)) {
+      this.PushMessageToLineService(
+        customer,
+        'กรุณาระบุเบอร์โทรศัพท์ของคุณให้ถูกต้องๅๅ',
+      );
+      return;
+    }
+
+    this.contact.push(
+      JSON.stringify({
+        address,
+        phone,
+      }),
+    );
+    // const latestOrder = await this.prismaService.order.findFirst({
+    //   where: { Customer: { UserID: customer }, status: 'PENDING' },
+    //   orderBy: { createdAt: 'desc' },
+    //   select: { id: true },
+    // });
+
+    // if (!latestOrder || !latestOrder.id) {
+    //   // this.PushMessageToLineService(customer, 'ไม่พบคำสั่งซื้อของคุณ');
+    //   this.PushMessageToLineService(customer, 'พ่อมึงตายหรอไอโง่');
+    //   return;
+    // }
+
+    // await this.prismaService.order.update({
+    //   where: {
+    //     id: latestOrder.id,
+    //   },
+    //   data: {
+    //     address: address || null,
+    //     phone: phone || null,
+    //   },
+    // });
+
+    this.PushMessageToLineService(
+      customer,
+      `อัปเดตข้อมูลที่อยู่และเบอร์โทรศัพท์เรียบร้อยแล้ว`,
+      `รายการสั่งซื้อของคุณคือ\n${this.orders
+        .map(
+          (order) =>
+            `${order.menu} ${order.quantity} ${
+              order.detail ? `(${order.detail})` : ''
+            }`,
+        )
+        .join('\n')}`,
+      'กรุณายืนยันคำสั่งซื้อ \n-ยืนยัน\n-ยกเลิก',
+    );
+  }
+
   private async OrderProcessingService(
     customer: string,
     data: string,
@@ -299,26 +399,38 @@ export class ChatRestrictedService {
       .map((line) => {
         const match = line.match(/-?(.+?)\s(\d+)(?:\s?\((.*?)\))?$/);
         if (match) {
+          const menu = match[1].trim();
+          const quantity = parseInt(match[2], 10);
+          const detail = match[3]?.trim() || '';
+
+          if (isNaN(quantity) || quantity <= 0) {
+            this.PushMessageToLineService(
+              customer,
+              `กรุณากรอกจำนวนสินค้าให้ถูกต้อง`,
+            );
+            return null;
+          }
           return {
-            menu: match[1].trim(),
-            quantity: parseInt(match[2], 10),
-            detail: match[3]?.trim() || '',
+            menu,
+            quantity,
+            detail,
           };
         }
+        return null;
       })
       .filter(Boolean);
-    this.PushMessageToLineService(
-      customer,
-      `รายการสั่งซื้อของคุณคือ\n${this.orders
-        .map(
-          (order) =>
-            `${order.menu} ${order.quantity} ${
-              order.detail ? `(${order.detail})` : ''
-            }`,
-        )
-        .join('\n')}`,
-      'กรุณายืนยันคำสั่งซื้อ \n-ยืนยัน\n-ยกเลิก\n-แก้ไข',
-    );
+
+    if (this.orders.length > 0) {
+      this.PushMessageToLineService(
+        customer,
+        `กรุณากรอกที่อยู่และเบอร์โทรศัพท์ของคุณ\n-ที่อยู่ <ที่อยู่>\n-เบอร์ <เบอร์โทรศัพท์>\n\nตัวอย่าง\nที่อยู่ 123 ถนน ABC\nเบอร์ 0123456789`,
+      );
+    } else {
+      this.PushMessageToLineService(
+        customer,
+        `กรุณากรอกข้อมูลรายการอาหารให้ถูกต้อง`,
+      );
+    }
   }
 
   private async OrderHandleService(
@@ -332,7 +444,7 @@ export class ChatRestrictedService {
       this.PushMessageToLineService(
         customerID,
         `รับรายการสั่งซื้อของคุณเรียบร้อยแล้ว`,
-        // `กรุณชำระเงิน`,
+        `กรุณชำระเงินไอเหี้ยโง่กูบอกให้จ่ายเงินไงไม่ฟังวะ`,
       );
       // .then(() => {
       //   this.PushImageToLineService(
@@ -351,6 +463,8 @@ export class ChatRestrictedService {
         quantity: this.orders
           .map((order) => order.quantity)
           .reduce((a, b) => a + b, 0),
+        address: this.contact[0] || null,
+        phone: this.contact[0] || null,
         createdAt: new Date(),
         totalprice:
           this.orders
