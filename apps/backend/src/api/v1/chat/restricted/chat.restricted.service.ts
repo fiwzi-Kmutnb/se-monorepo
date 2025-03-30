@@ -326,8 +326,7 @@ export class ChatRestrictedService {
     // console.log('📌 ตรวจสอบข้อมูล:', { address, phone });
 
     if (this.orders.length === 0) {
-      // this.PushMessageToLineService(customer, 'ไม่พบรายการอาหารที่คุณสั่ง');
-      this.PushMessageToLineService(customer, 'พ่อมึงตายหรอไอโง่');
+      this.PushMessageToLineService(customer, 'ไม่พบรายการอาหารที่คุณสั่ง');
       return;
     }
 
@@ -353,27 +352,6 @@ export class ChatRestrictedService {
         phone,
       }),
     );
-    // const latestOrder = await this.prismaService.order.findFirst({
-    //   where: { Customer: { UserID: customer }, status: 'PENDING' },
-    //   orderBy: { createdAt: 'desc' },
-    //   select: { id: true },
-    // });
-
-    // if (!latestOrder || !latestOrder.id) {
-    //   // this.PushMessageToLineService(customer, 'ไม่พบคำสั่งซื้อของคุณ');
-    //   this.PushMessageToLineService(customer, 'พ่อมึงตายหรอไอโง่');
-    //   return;
-    // }
-
-    // await this.prismaService.order.update({
-    //   where: {
-    //     id: latestOrder.id,
-    //   },
-    //   data: {
-    //     address: address || null,
-    //     phone: phone || null,
-    //   },
-    // });
 
     this.PushMessageToLineService(
       customer,
@@ -444,7 +422,7 @@ export class ChatRestrictedService {
       this.PushMessageToLineService(
         customerID,
         `รับรายการสั่งซื้อของคุณเรียบร้อยแล้ว`,
-        `กรุณชำระเงินไอเหี้ยโง่กูบอกให้จ่ายเงินไงไม่ฟังวะ`,
+        `กรุณชำระเงิน`,
       );
       // .then(() => {
       //   this.PushImageToLineService(
