@@ -139,6 +139,7 @@ model order {
   orderlist       Json
   message         String?
   address         String?
+  phone           String?
   totalprice      Float
   quantity        Int
   status          StatusOrder
