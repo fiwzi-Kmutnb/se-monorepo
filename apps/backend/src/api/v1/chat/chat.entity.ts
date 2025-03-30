@@ -36,3 +36,14 @@ export interface orderlist
     quantity: number;
     detail: string | null;
   }> {}
+
+export interface orderformat {
+  id: number;
+  cusID: string;
+  menu: orderlist;
+  quantity: number;
+  totalprice: number;
+  address: string;
+  phone: string;
+  status: string;
+}

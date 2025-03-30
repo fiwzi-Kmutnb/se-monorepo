@@ -22,6 +22,7 @@ export class OrderRestrictedService {
       timestamp: new Date().toISOString(),
     };
   }
+
   async GetPendingOrderService(): Promise<Response> {
     const order = await this.prismaService.order.findMany({
       where: {
@@ -41,6 +42,7 @@ export class OrderRestrictedService {
       timestamp: new Date().toISOString(),
     };
   }
+
   async UpdateAcceptOrderService(
     data: UpdateStatusOrderDTO,
     param: ParamIdDTO,

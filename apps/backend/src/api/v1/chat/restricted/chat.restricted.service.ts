@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   Extractmessage,
   Linemessage,
+  orderformat,
   orderlist,
   Profile,
   Sendmessage,
@@ -29,6 +30,16 @@ export class ChatRestrictedService {
   contact: { address: string; phone: string } = {
     address: '',
     phone: '',
+  };
+  createorder: orderformat = {
+    id: null,
+    cusID: '',
+    menu: [],
+    quantity: 0,
+    totalprice: 0,
+    address: '',
+    phone: '',
+    status: 'PENDING',
   };
 
   private async PushMessageToLineService(userID: string, ...texts: string[]) {
@@ -418,10 +429,6 @@ export class ChatRestrictedService {
       this.PushMessageToLineService(customerID, 'ไม่พบรายการอาหารที่คุณสั่ง');
       return;
     } else {
-      this.chatgateway.sendOrderToClient(customerID, this.orders, [
-        this.contact.address,
-        this.contact.phone,
-      ]);
       this.PushMessageToLineService(
         customerID,
         `รับรายการสั่งซื้อของคุณเรียบร้อยแล้ว`,
@@ -436,7 +443,7 @@ export class ChatRestrictedService {
       // });
     }
 
-    await this.prismaService.order.create({
+    const detail = await this.prismaService.order.create({
       data: {
         Customer: { connect: { UserID: customerID } },
         orderlist: order,
@@ -453,5 +460,18 @@ export class ChatRestrictedService {
             .reduce((a, b) => a + b, 0) * 50,
       },
     });
+
+    this.createorder = {
+      id: detail.id,
+      menu: this.orders,
+      cusID: customerID,
+      address: this.contact.address,
+      phone: this.contact.phone,
+      quantity: detail.quantity,
+      totalprice: detail.totalprice,
+      status: detail.status,
+    };
+
+    this.chatgateway.sendOrderToClient(customerID, this.createorder);
   }
 }
