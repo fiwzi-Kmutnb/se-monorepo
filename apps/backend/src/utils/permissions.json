@@ -9,5 +9,6 @@
   "dashboardAnalysis": 10000000,
   "lineChat": 100000000,
   "broadCast": 1000000000,
-  "logSystem": 10000000000
+  "logSystem": 10000000000,
+  "orderEdit": 100000000000
 }

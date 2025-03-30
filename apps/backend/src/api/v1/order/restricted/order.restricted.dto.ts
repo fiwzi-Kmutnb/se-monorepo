@@ -10,9 +10,12 @@ const updateStatusOrderDTO = z.object({
       message: 'กรุณากรอกราคา',
     })
     .optional(),
-  status: z.enum(['ACCEPTED', 'CANCELLED', 'PENDING'], {
-    errorMap: () => ({ message: 'กรุณาเลือกสถานะ' }),
-  }),
+  status: z.enum(
+    ['PENDING', 'ACCEPTED', 'CANCELLED', 'DELIVERING', 'SUCCESS'],
+    {
+      errorMap: () => ({ message: 'กรุณาเลือกสถานะ' }),
+    },
+  ),
 });
 
 const paramIdDTO = z
