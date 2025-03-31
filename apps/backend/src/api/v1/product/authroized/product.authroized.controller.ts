@@ -22,6 +22,7 @@ import {
 import { Request, Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { HTTPException } from '@se/customfilter';
+import { RequirePermission } from 'src/decorators/permission.decorator';
 
 @Controller('v1/authroized/product')
 @UseGuards(AuthGuard)
@@ -31,12 +32,14 @@ export class ProductAuthroizedController {
   ) {}
 
   @Get('')
+  @RequirePermission('productEdit')
   async StockViewallController() {
     return this.productauthroizedService.ProductViewallService();
   }
 
   @Post('')
   @UseInterceptors(FileInterceptor('files'))
+  @RequirePermission('productEdit')
   async ProductCreateController(
     @Body() body: ProductCreateDTO,
     @Req() req: Request,
@@ -61,6 +64,7 @@ export class ProductAuthroizedController {
   }
 
   @Patch('/:id')
+  @RequirePermission('productEdit')
   async ProductUpdateController(
     @Body() body: ProductUpdateDTO,
     @Param() param: ProductParamsDTO,

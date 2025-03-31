@@ -2,10 +2,15 @@ import { PrismaService } from '@se/prisma';
 import { Injectable } from '@nestjs/common';
 import { Response } from 'src/types/interfaces';
 import { HTTPException } from '@se/customfilter';
-import { ParamIdDTO, UpdateStatusOrderDTO } from './order.restricted.dto';
+import {
+  ParamIdDTO,
+  UpdateStatusOrderDTO,
+  ViewOrderDTO,
+} from './order.restricted.dto';
 import { generate } from 'randomstring';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { Request } from 'express';
 
 @Injectable()
 export class OrderRestrictedService {
@@ -39,7 +44,12 @@ export class OrderRestrictedService {
     });
   }
 
-  private async NotifyStatustoLine(userID: string, status: string) {
+  private async NotifyStatustoLine(
+    userID: string,
+    status: string,
+    msg: string,
+    totalprice: number,
+  ) {
     if (status === 'DELIVERING') {
       await this.PushMessageToLineService(
         userID,
@@ -49,6 +59,13 @@ export class OrderRestrictedService {
       await this.PushMessageToLineService(
         userID,
         'ร้านได้ทำการรับออเดอร์ของคุณเรียบร้อยแล้ว',
+        `กรุณาชำระเงิน ${totalprice} บาท`,
+      );
+    } else if (status == 'CANCELLED') {
+      await this.PushMessageToLineService(
+        userID,
+        'ร้านได้ทำการยกเลิกออเดอร์ของคุณเรียบร้อยแล้ว',
+        `${msg}`,
       );
     }
   }
@@ -76,30 +93,28 @@ export class OrderRestrictedService {
     };
   }
 
-  async GetAcceptOrderService(): Promise<Response> {
+  async GetOrderService(data: ViewOrderDTO): Promise<Response> {
+    const { status } = data;
+    if (!status) {
+      throw new HTTPException({
+        message: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+      });
+    }
     const order = await this.prismaService.order.findMany({
       where: {
-        status: 'ACCEPTED',
+        status: status ? status : undefined,
       },
     });
+
+    if (order.length === 0) {
+      throw new HTTPException({
+        message: 'เกิดข้อผิดพลาด',
+      });
+    }
     return {
       statusCode: 200,
       message: 'ดึงข้อมูล Order สำเร็จ',
-      data: order,
-      type: 'SUCCESS',
-      timestamp: new Date().toISOString(),
-    };
-  }
-  async GetPendingOrderService(): Promise<Response> {
-    const order = await this.prismaService.order.findMany({
-      where: {
-        status: 'PENDING',
-      },
-    });
-    return {
-      statusCode: 200,
-      message: 'ยืนยัน Order สำเร็จ',
-      data: order,
+      data: order || null,
       type: 'SUCCESS',
       timestamp: new Date().toISOString(),
     };
@@ -108,49 +123,84 @@ export class OrderRestrictedService {
   async UpdateStatusOrderService(
     data: UpdateStatusOrderDTO,
     param: ParamIdDTO,
+    req: Request,
   ): Promise<Response> {
-    const { totalprice, status } = data;
+    const { totalprice, status, message } = data;
+
     const order = await this.prismaService.order.findUnique({
       where: {
         id: Number(param.id),
       },
       include: status === 'DELIVERING' ? { deliveryToken: true } : undefined,
     });
+
     if (!order) {
       throw new HTTPException({
         message: 'เกิดข้อผิดพลาด',
       });
     }
 
-    const Updatedate: any = {
+    const Updatedata: {
+      status: 'DELIVERING' | 'ACCEPTED' | 'CANCELLED' | 'PENDING' | 'SUCCESS';
+      totalprice: number;
+      message: string | null;
+      deliveryToken?: { create: { token: string; status: 'DELIVERING' } };
+      user?: { connect: { id: number } };
+    } = {
       status: status,
-      totalprice: status === 'ACCEPTED' ? totalprice + 10 : totalprice,
+      totalprice:
+        status === 'ACCEPTED'
+          ? totalprice
+            ? totalprice + 10
+            : order.totalprice + 10
+          : order.totalprice,
+      message: status === 'CANCELLED' ? message : null,
     };
 
     if (status === 'DELIVERING') {
       const token = generate(32);
-      Updatedate.deliveryToken = { create: { token, status: 'DELIVERING' } };
+      Updatedata.deliveryToken = { create: { token, status: 'DELIVERING' } };
     }
-    console.log('Updatedate', Updatedate);
 
-    await this.prismaService.order.update({
-      where: {
-        id: Number(param.id),
-      },
-      data: Updatedate,
-    });
+    if (status === 'ACCEPTED') {
+      Updatedata.user = { connect: { id: req.users.id } };
+    }
 
-    this.NotifyStatustoLine(order.customer_Lineid, status).catch(() => {
-      throw new HTTPException({
-        message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
+    // console.log('Updatedata', Updatedata);
+
+    if (status === 'CANCELLED' && order.status === 'DELIVERING') {
+      return {
+        statusCode: 400,
+        message: 'ไม่สามารถยกเลิกออเดอร์ได้',
+        type: 'SUCCESS',
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      await this.prismaService.order.update({
+        where: {
+          id: Number(param.id),
+        },
+        data: Updatedata,
       });
-    });
 
-    return {
-      statusCode: 200,
-      message: 'ยืนยัน Order สำเร็จ',
-      type: 'SUCCESS',
-      timestamp: new Date().toISOString(),
-    };
+      this.NotifyStatustoLine(
+        order.customer_Lineid,
+        status,
+        message ? message : null,
+        Updatedata.totalprice,
+      ).catch((e) => {
+        console.log(e);
+        throw new HTTPException({
+          message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
+        });
+      });
+
+      return {
+        statusCode: 200,
+        message: 'ยืนยัน Order สำเร็จ',
+        type: 'SUCCESS',
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 }

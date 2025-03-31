@@ -10,6 +10,20 @@ const updateStatusOrderDTO = z.object({
       message: 'กรุณากรอกราคา',
     })
     .optional(),
+  message: z
+    .string({
+      message: 'กรุณากรอกข้อความ',
+    })
+    .optional(),
+  status: z.enum(
+    ['PENDING', 'ACCEPTED', 'CANCELLED', 'DELIVERING', 'SUCCESS'],
+    {
+      errorMap: () => ({ message: 'กรุณาเลือกสถานะ' }),
+    },
+  ),
+});
+
+const vieworderDTO = z.object({
   status: z.enum(
     ['PENDING', 'ACCEPTED', 'CANCELLED', 'DELIVERING', 'SUCCESS'],
     {
@@ -29,4 +43,5 @@ const paramIdDTO = z
   });
 
 export class UpdateStatusOrderDTO extends createZodDto(updateStatusOrderDTO) {}
+export class ViewOrderDTO extends createZodDto(vieworderDTO) {}
 export class ParamIdDTO extends createZodDto(paramIdDTO) {}
