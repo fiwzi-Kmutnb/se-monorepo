@@ -236,6 +236,7 @@ export class ChatRestrictedService {
               ) => {
                 if (err) {
                   console.log('Error decoding QR code:', err);
+                  return;
                 }
                 if (result) {
                   // console.log('QR Code result:', result.result);
@@ -264,9 +265,9 @@ export class ChatRestrictedService {
                         return;
                       }
                       const lastOrder =
-                        await this.prismaService.order.findFirst({
+                        await this.prismaService.order.findUnique({
                           where: {
-                            id: this.createorder.id,
+                            id: this.createorder.id || 0,
                             customer_Lineid: user.userId,
                             status: 'ACCEPTED',
                           },
