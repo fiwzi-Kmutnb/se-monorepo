@@ -22,13 +22,15 @@ import {
 import { Request, Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { HTTPException } from '@se/customfilter';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('v1/authroized/product')
 @UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class ProductAuthroizedController {
   constructor(
     private readonly productauthroizedService: ProductAuthroizedService,
-  ) {}
+  ) { }
 
   @Get('')
   async StockViewallController() {
