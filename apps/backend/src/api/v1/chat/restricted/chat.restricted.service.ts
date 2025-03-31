@@ -581,7 +581,7 @@ export class ChatRestrictedService {
             const detail = match[3]?.trim() || '';
 
             if (isNaN(quantity) || quantity <= 0) {
-              await this.PushMessageToLineService(
+              this.PushMessageToLineService(
                 customer,
                 `กรุณากรอกจำนวนสินค้าให้ถูกต้อง`,
               );
@@ -615,7 +615,7 @@ export class ChatRestrictedService {
         .filter(Boolean),
     );
 
-    if (this.orders.length > 0) {
+    if (this.orders.length > 0 && this.orders[0] !== null) {
       this.PushMessageToLineService(
         customer,
         `กรุณากรอกที่อยู่และเบอร์โทรศัพท์ของคุณ\nที่อยู่ <ที่อยู่>\nเบอร์ <เบอร์โทรศัพท์>\n\nตัวอย่าง\nที่อยู่ 123 ถนน ABC\nเบอร์ 0123456789`,
