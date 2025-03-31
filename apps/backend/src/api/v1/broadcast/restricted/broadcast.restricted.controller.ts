@@ -42,11 +42,12 @@ export class BroadcastRestrictedController {
               message: error,
             });
           },
+          fileIsRequired: false,
         }),
     )
-    files: Express.Multer.File,
+    files?: Express.Multer.File,
   ) {
-    return this.BroadcastService.SendBroadcastMessageService(body, files, req);
+    return this.BroadcastService.SendBroadcastMessageService(body, req, files);
   }
   @Get()
   @RequirePermission('broadCast')

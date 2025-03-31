@@ -31,14 +31,14 @@ function Member() {
   const handleEdit = async () => {
     setLoading(true);
     axios.patch(`/v1/restricted/member/${selectedMember.id}`, {
-      role: selectedMember.role.id,
+      role: currentRole,
     }, {
       headers: {
         Authorization: `Bearer ${getCookie("token")}`,
       },
     }).then((response) => {
       toast.success("แก้ไขข้อมูลสมาชิกสำเร็จ");
-      setMembers(members.map((member) => member.id === selectedMember.id ? response.data.data : member));
+      fetchMembers();
       document.getElementById("my_modal_6").close();
     }).catch((error) => {
       toast.error(error.response.data.message);
@@ -140,16 +140,7 @@ function Member() {
      position="top-center"
           reverseOrder={false}
     />
-      <div className="mx-auto  max-w-6xl flex justify-end p-5">
-        <button
-          className="p-3 rounded-xl bg-gray-800 shadow-lg transition-all duration-200 hover:bg-gray-700 hover:scale-105 active:scale-95 focus:ring-2 focus:ring-gray-300"
-          onClick={() => document.getElementById("my_modal_5").showModal()}
-        >
-          <p className="text-white">
-            <FaPlus />
-          </p>
-        </button>
-        <dialog id="my_modal_6" className="modal modal-bottom sm:modal-middle">
+    <dialog id="my_modal_6" className="modal modal-bottom sm:modal-middle">
           <div className="modal-box bg-white text-black">
             <h3 className="font-bold text-lg text-center">แก้ไขข้อมูลสมาชิก</h3>
             <div>
@@ -179,7 +170,7 @@ function Member() {
                     <span className="label-text text-black">บทบาท</span>
                   </div>
                   <select
-                  value={selectedMember?.role.id}
+                  defaultChecked={selectedMember?.role.id}
                   onChange={(e) => {
                     setCurrentRole(Number(e.target.value));
                   }}
@@ -296,8 +287,20 @@ function Member() {
             </div>
           </div>
         </dialog>
+      
+      <div className="grid grid-cols-12">
+      <div className="col-span-10 col-start-2">
+      <div className="mx-auto flex justify-end p-5">
+        <button
+          className="p-3 rounded-xl bg-gray-800 shadow-lg transition-all duration-200 hover:bg-gray-700 hover:scale-105 active:scale-95 focus:ring-2 focus:ring-gray-300"
+          onClick={() => document.getElementById("my_modal_5").showModal()}
+        >
+          <p className="text-white">
+            <FaPlus />
+          </p>
+        </button>
       </div>
-      <div className="mx-auto  max-w-6xl p-5 bg-white shadow-lg min-h-[70vh] rounded-lg">
+      <div className="mx-auto p-5 bg-white shadow-lg min-h-[70vh] rounded-lg">
         <div className="flex md:flex-row justify-start items-center p-4">
           <div className="flex text-xl text-black gap-2">
             <FaUser />
@@ -357,6 +360,8 @@ function Member() {
             </tbody>
           </table>
         </div>
+      </div>
+      </div>
       </div>
     </>
   );

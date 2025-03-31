@@ -41,6 +41,7 @@ export class MemberRestrictedService {
         createdAt: true,
       },
     });
+    console.log(member);
 
     return {
       statusCode: 200,
@@ -196,7 +197,7 @@ export class MemberRestrictedService {
 
     if (!member) {
       throw new HTTPException({
-        message: `ไม่พบข้อมูล Member นี้`,
+        message: `ไม่พบข้อมูล Member นี้ หรือไม่สามารถลบได้`,
       });
     }
 

@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import { MdChat, MdHistory, MdOutlineSpaceDashboard, MdSettings } from "react-icons/md";
 import Link from "next/link";
-import { FaBroadcastTower, FaList, FaUsers } from "react-icons/fa";
+import { FaBroadcastTower, FaList, FaUsers, FaUserShield } from "react-icons/fa";
 import { RiAlignItemLeftFill } from "react-icons/ri";
 import { usePathname } from "next/navigation";
 
@@ -37,7 +37,7 @@ const Layout = ({ children }) => {
               <div className="icon px-2">
                 <MdOutlineSpaceDashboard />
               </div>
-              <span className="links_name">Dashboard</span>
+              <span className="links_name">Dashboard | แดชบอร์ด</span>
             </Link>
           </li>
           <li>
@@ -47,7 +47,17 @@ const Layout = ({ children }) => {
               <div className="icon px-2">
                 <FaUsers />
               </div>
-              <span className="links_name">Member</span>
+              <span className="links_name">Member | สมาชิก</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/panel/chat" className={
+              pathname === "/panel/chat" ? "active" : ""
+            }>
+              <div className="icon px-2">
+                <FaUserShield />
+              </div>
+              <span className="links_name">Role | ตำแหน่ง</span>
             </Link>
           </li>
           <li>
@@ -57,7 +67,7 @@ const Layout = ({ children }) => {
               <div className="icon px-2">
                 <RiAlignItemLeftFill />
               </div>
-              <span className="links_name">Stock</span>
+              <span className="links_name">Stock | สินค้า</span>
             </Link>
           </li>
           <li>
@@ -67,7 +77,7 @@ const Layout = ({ children }) => {
               <div className="icon px-2">
                 <MdHistory />
               </div>
-              <span className="links_name">History</span>
+              <span className="links_name">History | ประวัติ</span>
             </Link>
           </li>
           <li>
@@ -77,7 +87,7 @@ const Layout = ({ children }) => {
               <div className="icon px-2">
                 <FaList />
               </div>
-              <span className="links_name">Order</span>
+              <span className="links_name">Order | ออเดอร์</span>
             </Link>
           </li>
           <li>
@@ -87,7 +97,7 @@ const Layout = ({ children }) => {
               <div className="icon px-2">
                 <FaBroadcastTower />
               </div>
-              <span className="links_name">BroadCast</span>
+              <span className="links_name">BroadCast | ประกาศ</span>
             </Link>
           </li>
           <li>
@@ -97,7 +107,7 @@ const Layout = ({ children }) => {
               <div className="icon px-2">
                 <MdSettings />
               </div>
-              <span className="links_name">Configuration</span>
+              <span className="links_name">Config | ข้อมูลเบื้องต้น</span>
             </Link>
           </li>
           <li>
@@ -107,14 +117,14 @@ const Layout = ({ children }) => {
               <div className="icon px-2">
                 <MdChat />
               </div>
-              <span className="links_name">Chat</span>
+              <span className="links_name">Chat | แชท</span>
             </Link>
           </li>
           <li className="profile">
             <div className="profile-details">
               <div className="name_job">
                 <div className="flex">
-                  <div className="self-end text-black">
+                  <div className="self-end text-black text-[12px]">
                     &copy; Copyright 2025 all rights reserved by tumgap
                   </div>
 
