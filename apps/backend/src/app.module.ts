@@ -18,6 +18,7 @@ import { BroadcastModule } from './api/v1/broadcast/broadcast.module';
 import { join } from 'path';
 import { ChatModule } from './api/v1/chat/chat.module';
 import { OrderModule } from './api/v1/order/order.module';
+import { DashboardModule } from './api/v1/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { OrderModule } from './api/v1/order/order.module';
     BroadcastModule,
     ChatModule,
     OrderModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [
