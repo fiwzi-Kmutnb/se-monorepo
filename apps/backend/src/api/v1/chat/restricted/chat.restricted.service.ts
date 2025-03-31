@@ -4,6 +4,7 @@ import {
   Linemessage,
   orderformat,
   orderlist,
+  payment,
   Profile,
   Sendmessage,
 } from '../chat.entity';
@@ -16,6 +17,10 @@ import { ChatRestrictedGateway } from './chat.restricted.gateway';
 import { Socket } from 'socket.io';
 import { generate } from 'randomstring';
 import * as fs from 'fs';
+// import QrScanner from 'qr-scanner';
+import * as Jimp from 'jimp';
+import * as QrCode from 'qrcode-reader';
+import { parse } from 'promptparse';
 
 @Injectable()
 export class ChatRestrictedService {
@@ -40,6 +45,7 @@ export class ChatRestrictedService {
     address: '',
     phone: '',
     status: 'PENDING',
+    createAt: null,
   };
 
   private async PushMessageToLineService(userID: string, ...texts: string[]) {
@@ -221,13 +227,193 @@ export class ChatRestrictedService {
             ),
           )
             .then(async (res) => {
-              const filename = `${generate(30)}.$ {res.headers['content-type'].split('/')[1]}`;
+              const filename = `${generate(30)}.${res.headers['content-type'].split('/')[1]}`;
               fs.writeFileSync(`./storage/slip/${filename}`, res.data);
-              this.chatgateway.sendMessageToClient(
-                filename,
-                event.source.userId,
-                'image',
-              );
+              const image = await Jimp.Jimp.read(res.data);
+              const qr = new QrCode();
+              qr.callback = async (
+                err: Error | null,
+                result: { result: string } | null,
+              ) => {
+                if (err) {
+                  console.log('Error decoding QR code:', err);
+                }
+                if (result) {
+                  // console.log('QR Code result:', result.result);
+                  const pqqr = parse(result.result);
+                  if (pqqr !== null) {
+                    await firstValueFrom(
+                      this.httpService.post<payment>(
+                        `https://suba.rdcw.co.th/v1/inquiry`,
+                        {
+                          payload: result.result,
+                        },
+                        {
+                          auth: {
+                            username: process.env.USER_SLIP,
+                            password: process.env.PASSWORD_SLIP,
+                          },
+                        },
+                      ),
+                    ).then(async (res) => {
+                      const amount = res?.data?.data?.amount;
+                      if (amount == null) {
+                        this.PushMessageToLineService(
+                          user.userId,
+                          'จำนวนเงินไม่ถูกต้อง',
+                        );
+                        return;
+                      }
+                      const lastOrder =
+                        await this.prismaService.order.findFirst({
+                          where: {
+                            customer_Lineid: user.userId,
+                            status: 'ACCEPTED',
+                          },
+                        });
+                      if (lastOrder == null) {
+                        this.PushMessageToLineService(
+                          user.userId,
+                          'ไม่พบรายการสั่งซื้อที่ต้องการชำระเงิน',
+                        );
+                        return;
+                      }
+                      if (lastOrder.totalprice != amount) {
+                        this.PushMessageToLineService(
+                          user.userId,
+                          'จำนวนเงินไม่ถูกต้อง',
+                        );
+                        return;
+                      }
+                      const bank_receiver_account =
+                        res?.data?.data?.receiver?.account?.value?.replaceAll(
+                          '-',
+                          '',
+                        );
+                      const bank_receiver_proxy =
+                        res?.data?.data?.receiver?.proxy?.value?.replaceAll(
+                          '-',
+                          '',
+                        );
+                      if (bank_receiver_account != null) {
+                        const bank_receiver_accountLength =
+                          bank_receiver_account.length;
+                        for (let x = 0; x < bank_receiver_accountLength; x++) {
+                          if (bank_receiver_account[x].toUpperCase() != 'X') {
+                            if (
+                              bank_receiver_account[x] !=
+                              process.env.BANK_NUMBER[x]
+                            ) {
+                              this.PushMessageToLineService(
+                                user.userId,
+                                'โอนเข้าบัญชีไม่ถูกต้อง',
+                              );
+                              return;
+                            }
+                          }
+                        }
+                      }
+                      if (bank_receiver_proxy != null) {
+                        const bank_receiver_proxyLength =
+                          bank_receiver_proxy.length;
+                        const ppLength = process.env.PROMPTPAY_PHONE.length;
+                        const tranLength = process.env.TRANSACTION_QR.length;
+                        for (let x = 0; x < bank_receiver_proxyLength; x++) {
+                          if (bank_receiver_proxy[x].toUpperCase() != 'X') {
+                            if (bank_receiver_proxyLength == ppLength) {
+                              if (
+                                bank_receiver_proxy[x] !=
+                                process.env.PROMPTPAY_PHONE[x]
+                              ) {
+                                this.PushMessageToLineService(
+                                  user.userId,
+                                  'โอนเข้าบัญชีไม่ถูกต้อง',
+                                );
+                                return;
+                              }
+                            } else if (
+                              bank_receiver_proxyLength == tranLength
+                            ) {
+                              if (
+                                bank_receiver_proxy[x] !=
+                                process.env.TRANSACTION_QR[x]
+                              ) {
+                                this.PushMessageToLineService(
+                                  user.userId,
+                                  'โอนเข้าบัญชีไม่ถูกต้อง',
+                                );
+                                return;
+                              }
+                            } else {
+                              this.PushMessageToLineService(
+                                user.userId,
+                                'โอนเข้าบัญชีไม่ถูกต้อง',
+                              );
+                              return;
+                            }
+                          }
+                        }
+                      }
+                      await this.prismaService.order
+                        .update({
+                          where: {
+                            id: lastOrder.id,
+                          },
+                          data: {
+                            payments: {
+                              create: {
+                                price: amount,
+                                bank_type: res?.data?.data?.receivingBank,
+                                type: 'QRCODE_CHECK',
+                                transaction: res?.data?.data?.transRef,
+                                respone: JSON.parse(
+                                  JSON.stringify(res?.data?.data),
+                                ),
+                                status: 'SUCCESS',
+                              },
+                            },
+                          },
+                        })
+                        .then(() => {
+                          this.PushMessageToLineService(
+                            user.userId,
+                            'ยืนยันการชำระเงิน ชำระเงินสำเร็จ',
+                          );
+                        })
+                        .catch(async () => {
+                          await this.prismaService.order.update({
+                            where: {
+                              id: lastOrder.id,
+                            },
+                            data: {
+                              payments: {
+                                create: {
+                                  price: amount || 0,
+                                  bank_type:
+                                    res?.data?.data?.receivingBank || null,
+                                  type: 'QRCODE_CHECK',
+                                  transaction:
+                                    res?.data?.data?.transRef || null,
+                                  respone:
+                                    JSON.parse(
+                                      JSON.stringify(res?.data?.data),
+                                    ) || null,
+                                  status: 'FAILED',
+                                },
+                              },
+                            },
+                          });
+                          this.PushMessageToLineService(
+                            user.userId,
+                            'เกิดข้อผิดพลาดในการบันทึกข้อมูลการชำระเงิน',
+                          );
+                        });
+                    });
+                  }
+                }
+              };
+              qr.decode(image.bitmap);
+
               const chatData = await this.prismaService.chat.findUnique({
                 where: { cusID: user.userId },
                 select: { data: true },
@@ -382,36 +568,55 @@ export class ChatRestrictedService {
     customer: string,
     data: string,
   ): Promise<void> {
-    this.orders = data
-      .split('\n')
-      .map((line) => {
-        const match = line.match(/-?(.+?)\s(\d+)(?:\s?\((.*?)\))?$/);
-        if (match) {
-          const menu = match[1].trim();
-          const quantity = parseInt(match[2], 10);
-          const detail = match[3]?.trim() || '';
+    this.orders = await Promise.all(
+      data
+        .split('\n')
+        .map(async (line) => {
+          const match = line.match(/-?(.+?)\s(\d+)(?:\s?\((.*?)\))?$/);
+          if (match) {
+            const menu = match[1].trim();
+            const quantity = parseInt(match[2], 10);
+            const detail = match[3]?.trim() || '';
 
-          if (isNaN(quantity) || quantity <= 0) {
-            this.PushMessageToLineService(
-              customer,
-              `กรุณากรอกจำนวนสินค้าให้ถูกต้อง`,
-            );
-            return null;
+            if (isNaN(quantity) || quantity <= 0) {
+              await this.PushMessageToLineService(
+                customer,
+                `กรุณากรอกจำนวนสินค้าให้ถูกต้อง`,
+              );
+              return null;
+            }
+
+            // console.log('📌 ตรวจสอบข้อมูล:', {
+            //   menu: menu.trim().replace(/\s+/g, ''),
+            //   quantity,
+            //   detail,
+            // });
+
+            const menuRegex = menu.trim().replace(/\s+/g, '');
+            const menuItem = await this.prismaService.product.findFirst({
+              where: { name: { contains: menuRegex } },
+            });
+
+            if (!menuItem) {
+              await this.PushMessageToLineService(customer, `ไม่พบเมนูในระบบ`);
+              return null;
+            }
+
+            return {
+              menu,
+              quantity,
+              detail,
+            };
           }
-          return {
-            menu,
-            quantity,
-            detail,
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
+          return null;
+        })
+        .filter(Boolean),
+    );
 
     if (this.orders.length > 0) {
       this.PushMessageToLineService(
         customer,
-        `กรุณากรอกที่อยู่และเบอร์โทรศัพท์ของคุณ\n-ที่อยู่ <ที่อยู่>\n-เบอร์ <เบอร์โทรศัพท์>\n\nตัวอย่าง\nที่อยู่ 123 ถนน ABC\nเบอร์ 0123456789`,
+        `กรุณากรอกที่อยู่และเบอร์โทรศัพท์ของคุณ\nที่อยู่ <ที่อยู่>\nเบอร์ <เบอร์โทรศัพท์>\n\nตัวอย่าง\nที่อยู่ 123 ถนน ABC\nเบอร์ 0123456789`,
       );
     } else {
       this.PushMessageToLineService(
@@ -432,7 +637,7 @@ export class ChatRestrictedService {
       this.PushMessageToLineService(
         customerID,
         `รับรายการสั่งซื้อของคุณเรียบร้อยแล้ว`,
-        `กรุณชำระเงิน`,
+        `กรุณารอสักครู่....`,
       );
       // .then(() => {
       //   this.PushImageToLineService(
@@ -470,6 +675,7 @@ export class ChatRestrictedService {
       quantity: detail.quantity,
       totalprice: detail.totalprice,
       status: detail.status,
+      createAt: detail.createdAt,
     };
 
     this.chatgateway.sendOrderToClient(customerID, this.createorder);

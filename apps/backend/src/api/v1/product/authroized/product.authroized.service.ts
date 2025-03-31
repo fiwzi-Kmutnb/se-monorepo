@@ -31,9 +31,7 @@ export class ProductAuthroizedService {
     return {
       statusCode: 200,
       message: 'ดึงข้อมูลสินค้าสำเร็จ',
-      data: {
-        data: product,
-      },
+      data: product,
       type: 'SUCCESS',
       timestamp: new Date().toISOString(),
     };
