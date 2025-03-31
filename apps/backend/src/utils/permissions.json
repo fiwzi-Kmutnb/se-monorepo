@@ -1,0 +1,13 @@
+{
+  "memberRegister": 1,
+  "memberEditRoles": 10,
+  "rolesCreate": 100,
+  "rolesEdit": 1000,
+  "stockEdit": 10000,
+  "productEdit": 100000,
+  "historyOrder": 1000000,
+  "dashboardAnalysis": 10000000,
+  "lineChat": 100000000,
+  "broadCast": 1000000000,
+  "logSystem": 10000000000
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@se/prisma",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "pnpm generate && tsc --build",
+    "generate": "prisma generate",
+    "dbpush": "prisma db push && pnpm build"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prisma": "^6.2.1"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.3.8",
+    "@prisma/client": "^6.2.1",
+    "typescript": "^5.4.5"
+  }
+}
