@@ -17,7 +17,6 @@ import { ChatRestrictedGateway } from './chat.restricted.gateway';
 import { Socket } from 'socket.io';
 import { generate } from 'randomstring';
 import * as fs from 'fs';
-// import QrScanner from 'qr-scanner';
 import * as Jimp from 'jimp';
 import * as QrCode from 'qrcode-reader';
 import { parse } from 'promptparse';
@@ -267,6 +266,7 @@ export class ChatRestrictedService {
                       const lastOrder =
                         await this.prismaService.order.findFirst({
                           where: {
+                            id: this.createorder.id,
                             customer_Lineid: user.userId,
                             status: 'ACCEPTED',
                           },
