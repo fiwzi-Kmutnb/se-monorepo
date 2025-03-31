@@ -48,6 +48,14 @@ export class AuthGuestService {
       email: user.email,
       username: user.username,
     });
+    await this.prismaService.logLogin.create({
+      data: {
+        user: { connect: { id: user.id } },
+        status: 'SUCCESS',
+        IP: '127.0.0.1',
+        action: 'Login',
+      },
+    });
 
     return {
       statusCode: 200,

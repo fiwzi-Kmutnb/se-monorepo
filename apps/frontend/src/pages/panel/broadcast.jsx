@@ -1,20 +1,53 @@
 import React, { useRef, useState } from "react";
-import Layout from "@/component/layout";
+import Layout from "@/components/layout";
 import Image from "next/image";
 import { FaCamera, FaPhotoVideo } from "react-icons/fa";
+import axios from "@/lib/axios";
+import { getCookie } from "cookies-next";
+import toast from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 
 function Broadcast() {
   const fileInputRef = useRef(null);
   const [image, setImage] = useState(null);
+  const [imageBuffer, setImageBuffer] = useState(null);
   const [text, setText] = useState("");
 
   const handleClick = () => {
     fileInputRef.current.click();
   };
 
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if(text === "") {
+      toast.error("กรุณากรอกข้อความ")
+      return;
+    }
+    const formData = new FormData();
+    formData.append("files", imageBuffer);
+    formData.append("broadcastMessage", text);
+
+    axios.post("/v1/restricted/broadcast/announce", formData, {
+      headers: {
+        Authorization: `Bearer ${getCookie("token")}`,
+        "Content-Type": "multipart/form-data",
+      },
+    }).then((response) => {
+      console.log("Broadcast sent successfully:", response.data);
+      // Reset the form after successful submission
+      setImage(null);
+      setText("");
+    }).catch((error => {
+      console.error("Error sending broadcast:", error.response.data);
+      // Handle the error as needed
+    }))
+  }
+
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
+      setImageBuffer(file);
       const imageUrl = URL.createObjectURL(file);
       setImage(imageUrl);
     }
@@ -24,7 +57,15 @@ function Broadcast() {
     setText(event.target.value);
   };
 
+
+
   return (
+    <>
+    <Toaster
+    zindex={9999}
+     position="top-center"
+          reverseOrder={false}
+    />
     <div className="min-h-screen p-6 flex flex-col items-center ">
       <div className="text-start w-full max-w-5xl">
         <p className="font-semibold text-2xl sm:text-3xl text-black">
@@ -59,7 +100,7 @@ function Broadcast() {
             value={text}
             onChange={handleTextChange}
           ></textarea>
-          <button className="bg-red-600 hover:bg-red-700 text-sm w-full text-white py-2 px-4 rounded-lg shadow-md">
+          <button onClick={handleSubmit} className="bg-red-600 hover:bg-red-700 text-sm w-full text-white py-2 px-4 rounded-lg shadow-md">
             ส่งข้อความไปยังลูกค้า
           </button>
         </div>
@@ -108,6 +149,7 @@ function Broadcast() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

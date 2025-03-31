@@ -27,7 +27,7 @@ export class PermissionGuard implements CanActivate {
 
     if (!user) {
       throw new HTTPException({
-        message: '',
+        message: 'เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์',
       });
     }
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Layout from "@/component/layout";
+import Layout from "@/components/layout";
 import {
   LineChart,
   Line,

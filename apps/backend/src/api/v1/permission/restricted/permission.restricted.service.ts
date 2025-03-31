@@ -16,6 +16,9 @@ export class PermissionRestrictedService {
     const roles = await this.prismaService.role.findMany({
       where: {
         deletedAt: null,
+        NOT: {
+          permission: -1,
+        },
       },
     });
 

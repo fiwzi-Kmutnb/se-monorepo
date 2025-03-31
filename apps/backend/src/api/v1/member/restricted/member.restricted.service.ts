@@ -1,4 +1,8 @@
-import { CreateMemberDTO, ParamIdDTO } from './member.restricted.dto';
+import {
+  CreateMemberDTO,
+  ParamIdDTO,
+  UpdateMemberDTO,
+} from './member.restricted.dto';
 import { Injectable } from '@nestjs/common';
 import { Response } from 'src/types/interfaces';
 import { PrismaService } from '@se/prisma';
@@ -14,7 +18,30 @@ export class MemberRestrictedService {
       where: {
         deletedAt: null,
       },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        profile_img: true,
+        role: {
+          select: {
+            name: true,
+            id: true,
+          },
+        },
+        logLogin: {
+          select: {
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+        createdAt: true,
+      },
     });
+    console.log(member);
 
     return {
       statusCode: 200,
@@ -44,10 +71,13 @@ export class MemberRestrictedService {
 
     const roleCheck = await this.prismaService.role.findUnique({
       where: {
-        name: role,
+        id: role,
+        NOT: {
+          permission: -1,
+        },
       },
     });
-
+    console.log(roleCheck);
     if (!roleCheck) {
       throw new HTTPException({
         message: `Role ${role} ไม่พบในระบบ`,
@@ -60,7 +90,7 @@ export class MemberRestrictedService {
         username: username,
         password: await argon2.hash(password),
         role: {
-          connect: { name: role },
+          connect: { id: role },
         },
       },
     });
@@ -85,11 +115,11 @@ export class MemberRestrictedService {
     };
   }
   async UpdateMemberService(
-    data: CreateMemberDTO,
+    data: UpdateMemberDTO,
     req: Request,
     param: ParamIdDTO,
   ): Promise<Response> {
-    const { email, username, role } = data;
+    const { role } = data;
     const member = await this.prismaService.users.findUnique({
       where: {
         id: Number(param.id),
@@ -107,7 +137,10 @@ export class MemberRestrictedService {
 
     const roleCheck = await this.prismaService.role.findUnique({
       where: {
-        name: role,
+        id: role,
+        NOT: {
+          permission: -1,
+        },
       },
     });
 
@@ -117,65 +150,32 @@ export class MemberRestrictedService {
       });
     }
 
-    await this.prismaService.users.update({
+    const user = await this.prismaService.users.update({
       where: { id: member.id },
       data: {
-        username: username,
         role: {
-          connect: { name: role },
+          connect: { id: role },
         },
       },
     });
 
-    if (!username && role) {
-      await this.prismaService.logMember.create({
-        data: {
-          actionBy: {
-            connect: {
-              id: req.users.id,
-            },
+    await this.prismaService.logMember.create({
+      data: {
+        actionBy: {
+          connect: {
+            id: req.users.id,
           },
-          email: email,
-          action: 'EDIT',
-          before: member.role.name,
-          after: role,
         },
-      });
-    }
-    if (username && !role) {
-      await this.prismaService.logMember.create({
-        data: {
-          actionBy: {
-            connect: {
-              id: req.users.id,
-            },
-          },
-          email: email,
-          action: 'EDIT',
-          before: member.username,
-          after: username,
-        },
-      });
-    }
-    if (username && role) {
-      await this.prismaService.logMember.create({
-        data: {
-          actionBy: {
-            connect: {
-              id: req.users.id,
-            },
-          },
-          email: email,
-          action: 'EDIT',
-          before: `${member.username} ${member.role.name}`,
-          after: `${username} ${role}`,
-        },
-      });
-    }
+        email: user.email,
+        action: 'EDIT',
+        before: member.role.name,
+        after: roleCheck.name,
+      },
+    });
 
     return {
       statusCode: 200,
-      message: `อัปเดต Member: ${email} สำเร็จ`,
+      message: `อัปเดต Member สำเร็จ`,
       type: 'SUCCESS',
       timestamp: new Date().toISOString(),
     };
@@ -187,12 +187,17 @@ export class MemberRestrictedService {
     const member = await this.prismaService.users.findUnique({
       where: {
         id: Number(param.id),
+        role: {
+          NOT: {
+            permission: -1,
+          },
+        },
       },
     });
 
     if (!member) {
       throw new HTTPException({
-        message: `ไม่พบข้อมูล Member นี้`,
+        message: `ไม่พบข้อมูล Member นี้ หรือไม่สามารถลบได้`,
       });
     }
 

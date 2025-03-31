@@ -18,27 +18,23 @@ export class BroadcastRestrictedService {
 
   async SendBroadcastMessageService(
     data: AnnounceBroadcastDTO,
-    files: Express.Multer.File,
     req: Request,
+    files?: Express.Multer.File,
   ): Promise<Response> {
     const { broadcastMessage } = data;
-
-    const filename = `${generate(30)}.${files.mimetype.split('/')[1]}`;
-    fs.writeFileSync(`./storage/broadcast/${filename}`, files.buffer);
-
+    const imagePayload = [];
+    if (typeof files != 'undefined') {
+      const filename = `${generate(30)}.${files.mimetype.split('/')[1]}`;
+      fs.writeFileSync(`./storage/broadcast/${filename}`, files.buffer);
+      const broadcastImage = `https://localhost:5000/storage/broadcast/${filename}`;
+      imagePayload.push({
+        type: 'image',
+        originalContentUrl: broadcastImage,
+        previewImageUrl: broadcastImage,
+      });
+    }
     const messagePayload = broadcastMessage
       ? [{ type: 'text', text: broadcastMessage }]
-      : [];
-
-    const broadcastImage = `www.localhost:5000/storage/broadcast/${filename}`;
-    const imagePayload = broadcastImage
-      ? [
-          {
-            type: 'image',
-            originalContentUrl: broadcastImage,
-            previewImageUrl: broadcastImage,
-          },
-        ]
       : [];
 
     const messages = [...messagePayload, ...imagePayload];
@@ -74,11 +70,35 @@ export class BroadcastRestrictedService {
         );
       })
       .then((follower) => {
-        if (broadcastMessage || broadcastImage) {
+        if (broadcastMessage && !imagePayload.length) {
           return this.prismaService.logBroadcast.create({
             data: {
-              broadcastImage: broadcastImage,
               broadcastMessage: broadcastMessage,
+              amount_customer: follower.data.followers,
+              actionBy: {
+                connect: { id: req.users.id },
+              },
+              action: 'ANNOUNCE',
+            },
+          });
+        }
+        if (broadcastMessage && imagePayload.length) {
+          return this.prismaService.logBroadcast.create({
+            data: {
+              broadcastImage: imagePayload[0].originalContentUrl,
+              broadcastMessage: broadcastMessage,
+              amount_customer: follower.data.followers,
+              actionBy: {
+                connect: { id: req.users.id },
+              },
+              action: 'ANNOUNCE',
+            },
+          });
+        }
+        if (!broadcastMessage && imagePayload.length) {
+          return this.prismaService.logBroadcast.create({
+            data: {
+              broadcastImage: imagePayload[0].originalContentUrl,
               amount_customer: follower.data.followers,
               actionBy: {
                 connect: { id: req.users.id },
@@ -94,7 +114,8 @@ export class BroadcastRestrictedService {
         type: 'SUCCESS' as const,
         timestamp: new Date().toISOString(),
       }))
-      .catch(() => {
+      .catch((err) => {
+        console.log(err.response.data);
         throw new HTTPException({ message: 'ส่งข้อความ Broadcast ไม่สำเร็จ' });
       });
   }

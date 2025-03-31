@@ -182,7 +182,8 @@ export class ChatRestrictedService {
               monthAt: new Date(),
             },
           });
-
+          console.log(extractmessage.message);
+          console.log(/^- ?แซนวิช/.test(extractmessage.message));
           if (/^- ?แซนวิช/.test(extractmessage.message)) {
             this.OrderProcessingService(user.userId, extractmessage.message);
           } else if (/^ที่อยู่/.test(extractmessage.message)) {

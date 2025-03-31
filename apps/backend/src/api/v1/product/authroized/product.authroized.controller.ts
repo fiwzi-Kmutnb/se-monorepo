@@ -23,13 +23,15 @@ import { Request, Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { HTTPException } from '@se/customfilter';
 import { RequirePermission } from 'src/decorators/permission.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('v1/authroized/product')
 @UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class ProductAuthroizedController {
   constructor(
     private readonly productauthroizedService: ProductAuthroizedService,
-  ) {}
+  ) { }
 
   @Get('')
   @RequirePermission('productEdit')
