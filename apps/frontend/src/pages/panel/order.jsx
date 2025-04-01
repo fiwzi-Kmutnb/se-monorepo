@@ -1,32 +1,98 @@
 import Layout from "@/components/layout";
-// import axios from "@/lib/axios";
+import { getCookie } from "cookies-next";
+import axios from "@/lib/axios";
 import Image from "next/image";
+import { useEffect } from "react";
+import { useState } from "react";
+import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const Order = () => {
-    // const [, setOrderAccept] = useState([]);
-    // const [, setOrderPending] = useState([]);
-    // const fetchAccept = () => {
-    //     axios.post("/v1/restricted/order/vieworder",{
-    //         "status": "ACCEPTED"
-    //     }).then((response) => {
-    //         setOrderAccept(response.data.data)
-    //     }).catch((e) => {
+    const [orderaccept, setOrderAccept] = useState([]);
+    const [orderPen, setOrderPending] = useState([]);
+    const fetchAccept = () => {
+        axios.post("/v1/restricted/order/vieworder",{
+            "status": "ACCEPTED"
+        },{
+            headers: {
+                Authorization: `Bearer ${getCookie("token")}`,
+            }
+        }).then((response) => {
+            setOrderAccept(response.data.data)
+        }).catch((e) => {
 
-    //     })
-    // }
-    // const fetchPadding = () => {
-    //     axios.post("/v1/restricted/order/vieworder",{
-    //         "status": "PENDING"
-    //     }).then((response) => {
-    //         setOrderPending(response.data.data)
-    //     }).catch((e) => {
+        })
+    }
+    const fetchPadding = () => {
+        axios.post("/v1/restricted/order/vieworder",{
+            "status": "PENDING"
+        }, {
+            headers: {
+                Authorization: `Bearer ${getCookie("token")}`,
+            }
+        }).then((response) => {
+            setOrderPending(response.data.data)
+        }).catch((e) => {
 
-    //     })
-    // }
+        })
+    }
+    const handleAcceptOrder = (id) => {
+        axios.patch("v1/restricted/order/status/"+id, {
+            "message": "string",
+            "status": "ACCEPTED"
+        },{
+            headers: {
+                Authorization: `Bearer ${getCookie("token")}`,
+            }
+        }).then((response) => {
+            toast.success("รับออเดอร์เรียบร้อย")
+            fetchAccept()
+            fetchPadding()
+        }).catch((e) => {
+            toast.error("เกิดข้อผิดพลาด")
+        })
+    }
+    const handleDeliveryOrder = (id) => {
+        axios.patch("v1/restricted/order/status/"+id, {
+            "message": "string",
+            "status": "DELIVERING"
+        },{
+            headers: {
+                Authorization: `Bearer ${getCookie("token")}`,
+            }
+        }).then((response) => {
+            toast.success("จัดส่งเรียบร้อย")
+            fetchAccept()
+            fetchPadding()
+        }).catch((e) => {
+            toast.error("เกิดข้อผิดพลาด")
+        })
+    }
+    const handleCancelOrder = (id) => {
+        axios.patch("v1/restricted/order/status/"+id, {
+            "message": "string",
+            "status": "CANCELLED"
+        },{
+            headers: {
+                Authorization: `Bearer ${getCookie("token")}`,
+            }
+        }).then((response) => {
+            toast.success("ยกเลิกออเดอร์เรียบร้อย")
+            fetchAccept()
+            fetchPadding()
+        }).catch((e) => {
+            toast.error("เกิดข้อผิดพลาด")
+        })
+    }
+
+    useEffect(() => {
+        fetchAccept()
+        fetchPadding()
+    },[])
     return (
         <>
 
-            <div className="border-gray-300 bg-white shadow-lg p-6 rounded-xl m-10">
+            <div className="border-gray-300 bg-white shadow-lg p-6 rounded-xl m-10 overflow-x-auto">
                 <table className="w-full border-collapse text-center mx-auto table-fixed">
                     <thead>
                         <tr>
@@ -43,44 +109,145 @@ const Order = () => {
                 </table>
             </div>
 
+    <Toaster
+     position="top-center"
+          reverseOrder={false}
+    />
             <div className="border-gray-300 bg-white shadow-lg p-6 rounded-xl m-10">
-                <table className="w-full border-collapse text-center mx-auto table-fixed">
+                <div className="overflow-x-auto w-full">
+                <table className="w-full border-collapse text-center mx-auto table-fixed ">
                     <tbody>
-                        <tr>
+                        {orderPen.map((item, index) => (
+                            <tr>
                             <td className="p-2 w-[10%]">
                                 <div className="flex items-center gap-1">
-                                    <span className="text-[#EF233C] text-xl font-semibold">#00001</span>
+                                    <span className="text-[#EF233C] text-xl font-semibold">#0000{item.id}</span>
                                     <span>คุณ</span>
-                                    <span>kakakak</span>
+                                    <span>
+                                        {item.Customer.displayName}
+                                    </span>
                                 </div>
                             </td>
                             <td className="p-2 w-[20%]">
-                                <div className="flex flex-col justify-center">
-                                    <li>
-                                        ก๋วยเตี๋ยวหมูแดงหวาน x1
-                                    </li>
-                                    <span className="text-xs text-gray-500">
-                                        พิเศษ | ไม่เอาผัก
-                                    </span>
-                                </div>
+                                {item.orderlist.map((itema, index) => (
+                                    <div className="flex flex-col justify-center" key={index}>
+                                        <li>
+                                            {itema.menu} x{itema.quantity}
+                                        </li>
+                                        <span className="text-xs text-gray-500">
+                                            {itema.detail || "ไม่ระบุ"}
+                                        </span>
+                                    </div>
+                                ))}
 
                             </td>
-                            <td className="p-2 w-[20%]">หอ Grove residence วงศ์สว่าง11</td>
-                            <td className="p-2 w-[10%]">฿189.00 (x1)</td>
-                            <td className="p-2 w-[10%]">16-12-2567 14:13</td>
-                            <td className="p-2 w-[10%]">
-                                <div className="rounded-lg bg-[#E1D7FF] text-sm text-[#9068FF] px-4 py-1 mx-auto w-fit">ไม่จ่าย</div>
+                            <td className="p-2 w-[20%]">
+                                {item.address || "รับที่ร้าน"}
                             </td>
                             <td className="p-2 w-[10%]">
-                                <button className="btn btn-sm bg-[#D90429] text-white rounded-full px-6">สลิป</button>
+                                {
+                                    item.totalprice.toLocaleString('th-TH', {
+                                        style: 'currency',
+                                        currency: 'THB',
+                                    })
+                                } (x{item.quantity})</td>
+                            <td className="p-2 w-[10%]">
+                                {new Date(item.createdAt).toLocaleDateString(
+                                    'th-TH',
+                                    {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    }
+                                )}
                             </td>
                             <td className="p-2 w-[10%]">
-                                <button className="btn btn-sm bg-[#D90429] text-white rounded-full text-xs px-6">แก้ไข</button>
-                                <button className="btn btn-sm bg-[#D90429] text-white rounded-full text-xs" onClick={() => document.getElementById('my_modal_1').showModal()}>ดูเพิ่มเติม</button>
+                                <div className="rounded-lg bg-[#E1D7FF] text-sm text-[#9068FF] px-4 py-1 mx-auto w-fit">
+                                    {item.paymentId || "ยังไม่จ่าย"}
+                                </div>
+                            </td>
+                            <td className="p-2 w-[10%]">
+                                <button disabled={!item.paymentId} className="btn btn-sm bg-[#D90429] text-white rounded-full px-6">สลิป</button>
+                            </td>
+                            <td className="p-2 w-[10%]">
+                                <button 
+                                onClick={() => handleAcceptOrder(item.id)}
+                                className="btn btn-sm bg-[#D90429] text-white rounded-full text-xs px-6">รับออเดอร์</button>
+                                <button 
+                                    onClick={() => handleCancelOrder(item.id)}
+                                    className="btn btn-sm bg-[#D90429] text-white rounded-full text-xs px-6">ยกเลิก</button>
                             </td>
                         </tr>
+                        ))}
+                        {orderaccept.map((item, index) => (
+                             <tr>
+                             <td className="p-2 w-[10%]">
+                                 <div className="flex items-center gap-1">
+                                     <span className="text-[#EF233C] text-xl font-semibold">#0000{item.id}</span>
+                                     <span>คุณ</span>
+                                     <span>
+                                         {item.Customer.displayName}
+                                     </span>
+                                 </div>
+                             </td>
+                             <td className="p-2 w-[20%]">
+                                 {item.orderlist.map((itema, index) => (
+                                     <div className="flex flex-col justify-center" key={index}>
+                                         <li>
+                                             {itema.menu} x{itema.quantity}
+                                         </li>
+                                         <span className="text-xs text-gray-500">
+                                             {itema.detail || "ไม่ระบุ"}
+                                         </span>
+                                     </div>
+                                 ))}
+ 
+                             </td>
+                             <td className="p-2 w-[20%]">
+                                 {item.address || "รับที่ร้าน"}
+                             </td>
+                             <td className="p-2 w-[10%]">
+                                 {
+                                     item.totalprice.toLocaleString('th-TH', {
+                                         style: 'currency',
+                                         currency: 'THB',
+                                     })
+                                 } (x{item.quantity})</td>
+                             <td className="p-2 w-[10%]">
+                                 {new Date(item.createdAt).toLocaleDateString(
+                                     'th-TH',
+                                     {
+                                         year: 'numeric',
+                                         month: '2-digit',
+                                         day: '2-digit',
+                                         hour: '2-digit',
+                                         minute: '2-digit',
+                                     }
+                                 )}
+                             </td>
+                             <td className="p-2 w-[10%]">
+                                 <div className="rounded-lg bg-[#E1D7FF] text-sm text-[#9068FF] px-4 py-1 mx-auto w-fit">
+                                     {item.paymentId || "ชำระเงินปลายทาง"}
+                                 </div>
+                             </td>
+                             <td className="p-2 w-[10%]">
+                                 <button disabled={!item.paymentId} className="btn btn-sm bg-[#D90429] text-white rounded-full px-6">สลิป</button>
+                             </td>
+                             <td className="p-2 w-[10%]">
+                                 <button 
+                                 onClick={() => handleDeliveryOrder(item.id)}
+                                 className="btn btn-sm bg-[#D90429] text-white rounded-full text-xs px-6">จัดส่ง</button>
+                                 <button 
+                                    onClick={() => handleCancelOrder(item.id)}
+                                    className="btn btn-sm bg-[#D90429] text-white rounded-full text-xs px-6">ยกเลิก</button>
+                             </td>
+                         </tr>
+                        ))}
                     </tbody>
                 </table>
+                </div>
             </div>
 
 

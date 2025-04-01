@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 const Rider = () => {
     const data = useParams()
@@ -98,8 +99,18 @@ const Rider = () => {
                     </div>
 
                     <div className='flex flex-row gap-1 col-span-3 col-start-6'>
-                        <div className="w-[100px] mr-[10%]"><button className="btn bg-[#323232] text-white rounded-lg text-[14px] w-full h-min">ไม่รับ</button></div>
-                        <div className="w-[120px]mr-[10%]"><button className="btn bg-[#D90429] text-white rounded-lg text-[14px] w-full h-min">จัดส่งแล้ว</button></div>
+                        <div className="w-[100px] mr-[10%]"><button
+                            onClick={() => {
+                                toast.error("ยกเลิก ออเดอร์สำเร็จ")
+                                router.push("/")
+                            }}
+                        className="btn bg-[#323232] text-white rounded-lg text-[14px] w-full h-min">ไม่รับ</button></div>
+                        <div className="w-[120px]mr-[10%]"><button 
+                            onClick={() => {
+                                toast.success("จัดส่งออเดอร์สำเร็จ")
+                                router.push("/")
+                            }}
+                        className="btn bg-[#D90429] text-white rounded-lg text-[14px] w-full h-min">จัดส่งแล้ว</button></div>
                     </div>
 
                 </div>

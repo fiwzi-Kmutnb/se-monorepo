@@ -3,7 +3,7 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const withPWA = nextPwa({
   dest: 'public',
-  disable: true,
+  // disable: true,
   register: true,
   skipWaiting: true,
 });
