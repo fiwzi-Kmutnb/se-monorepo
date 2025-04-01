@@ -326,7 +326,8 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {roles.map((customer, index) => (
+                  {/* {JSON.stringify(members.topcus)} */}
+                  {members.topcus?.map((customer, index) => (
                     <tr key={index} className="border-none">
                       <td className="p-2">
                         <img
@@ -335,7 +336,7 @@ function Dashboard() {
                           className="w-10 h-10 rounded-full"
                         />
                       </td>
-                      <td className="p-2">{customer.topcus.customer_name}</td>
+                      <td className="p-2">{customer.customer_name}</td>
                       <td className="p-2">{customer.totalprice}</td>
                     </tr>
                   ))}
