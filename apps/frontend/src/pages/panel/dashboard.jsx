@@ -10,6 +10,9 @@ import {
   Bar,
   ResponsiveContainer,
 } from "recharts";
+import { useEffect } from "react";
+import axios from "@/lib/axios";
+import { getCookie } from "cookies-next";
 
 const stats = [
   { title: "รายได้วันนี้", value: 3298, unit: "THB" },
@@ -76,7 +79,7 @@ const generateDailyData = () => {
     "NOV",
     "DEC",
   ];
-  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const daysInMonth = [31, 28, 31, 1];
 
   let dailyData = [];
 
@@ -96,6 +99,33 @@ const generateDailyData = () => {
 };
 
 const dailyData = generateDailyData();
+console.log(dailyData);
+const monthlyData = dailyData.reduce((acc, curr) => {
+  Object.keys(curr).forEach((key) => {
+    if (key !== "day") {
+      if (!acc[key]) {
+        acc[key] = 0;
+      }
+      acc[key] += curr[key];
+    }
+  });
+  return acc;
+}, {});
+
+// //รวมข้อมูลรายเดือนเป็นรายปี
+// const yearlyDataFromMonthly = Object.keys(monthlyData).reduce(
+//   (acc, month) => {
+//     const monthIndex = new Date(Date.parse(month + " 1, 2023")).getMonth();
+//     const year = new Date().getFullYear();
+//     if (!acc[year]) {
+//       acc[year] = { year, total: 0 };
+//     }
+//     acc[year].total += monthlyData[month];
+//     return acc;
+//   },
+//   {},
+//   {}
+// );
 
 const colors = [
   "#FF0000",
@@ -113,6 +143,8 @@ const colors = [
 ];
 
 function Dashboard() {
+  const [members, setMembers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [selectedOption, setSelectedOption] = useState("daily");
   const [selectedMonths, setSelectedMonths] = useState([
     "JAN",
@@ -134,6 +166,41 @@ function Dashboard() {
       prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month]
     );
   };
+
+  const fetchMembers = async () => {
+    axios
+      .get("/v1/authroized/dashboard/sales", {
+        headers: {
+          Authorization: `Bearer ${getCookie("token")}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data.data);
+        setMembers(response.data.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  const fetchRole = async () => {
+    axios
+      .get("/v1/authroized/dashboard/sales/range", {
+        headers: {
+          Authorization: `Bearer ${getCookie("token")}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data.data);
+        setRoles(response.data.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  useEffect(() => {
+    fetchMembers();
+    fetchRole();
+  }, []);
 
   return (
     <div className="m-5 md:m-10">
@@ -236,8 +303,10 @@ function Dashboard() {
                 <div className="stat">
                   <div className="stat-title text-black">{stat.title}</div>
                   <div className="stat-value font-semibold text-3xl">
-                    {stat.value}{" "}
-                    <span className="text-lg text-gray-500">{stat.unit}</span>
+                    {stat.value}
+                    <span className="text-sm font-normal ml-1">
+                      {stat.unit}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -253,23 +322,21 @@ function Dashboard() {
                   <tr className="border-none">
                     <th className="p-2">รูปภาพ</th>
                     <th className="p-2">ชื่อลูกค้า</th>
-                    <th className="p-2">เดือน/ปี</th>
                     <th className="p-2">มูลค่า (บาท)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {customers.map((customer, index) => (
+                  {roles.map((customer, index) => (
                     <tr key={index} className="border-none">
                       <td className="p-2">
                         <img
-                          src={customer.image}
-                          alt={customer.name}
+                          src={customer.customer_Img}
+                          alt={customer.customer_name}
                           className="w-10 h-10 rounded-full"
                         />
                       </td>
-                      <td className="p-2">{customer.name}</td>
-                      <td className="p-2">{customer.month}</td>
-                      <td className="p-2">{customer.amount}</td>
+                      <td className="p-2">{customer.topcus.customer_name}</td>
+                      <td className="p-2">{customer.totalprice}</td>
                     </tr>
                   ))}
                 </tbody>
