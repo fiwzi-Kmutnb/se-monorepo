@@ -34,15 +34,12 @@ function Broadcast() {
       },
     }).then((response) => {
       console.log("Broadcast sent successfully:", response.data);
-      // Reset the form after successful submission
       setImage(null);
       setText("");
     }).catch((error => {
       console.error("Error sending broadcast:", error.response.data);
-      // Handle the error as needed
     }))
   }
-
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];

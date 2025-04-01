@@ -13,7 +13,7 @@ import { generate } from 'randomstring';
 
 @Injectable()
 export class ProductAuthroizedService {
-  constructor(private readonly prismaService: PrismaService) { }
+  constructor(private readonly prismaService: PrismaService) {}
 
   async ProductViewallService(): Promise<Response> {
     const product = await this.prismaService.product.findMany({
@@ -119,7 +119,7 @@ export class ProductAuthroizedService {
         info: info,
         price: Number(price),
         quantity: Number(quantity),
-        status: status,
+        status: status === 'true',
       },
     });
 

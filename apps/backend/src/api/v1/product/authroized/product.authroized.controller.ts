@@ -31,7 +31,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 export class ProductAuthroizedController {
   constructor(
     private readonly productauthroizedService: ProductAuthroizedService,
-  ) { }
+  ) {}
 
   @Get('')
   @RequirePermission('productEdit')
@@ -66,6 +66,7 @@ export class ProductAuthroizedController {
   }
 
   @Patch('/:id')
+  @UseInterceptors(FileInterceptor('files'))
   @RequirePermission('productEdit')
   async ProductUpdateController(
     @Body() body: ProductUpdateDTO,

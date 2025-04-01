@@ -14,7 +14,17 @@ import { forwardRef, Inject, UseFilters, UseGuards } from '@nestjs/common';
 import { AllWsExceptionsFilter } from '@se/customfilter/dist/custom';
 import { WsGuard } from 'src/utils/jwtio.guard';
 
-@WebSocketGateway({ namespace: 'chat' })
+@WebSocketGateway({
+  // namespace: 'chat',
+  // path: "/chat",
+  // path: '/chat',
+  // cors: {
+  //   origin: '*',
+  //   methods: ['GET', 'POST'],
+  //   allowedHeaders: ['Content-Type'],
+  //   credentials: true,
+  // },
+})
 export class ChatRestrictedGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {

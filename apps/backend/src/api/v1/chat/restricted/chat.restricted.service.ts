@@ -66,9 +66,9 @@ export class ChatRestrictedService {
         },
       ),
     ).catch(() => {
-      throw new HTTPException({
-        message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
-      });
+      // throw new HTTPException({
+      //   message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
+      // });
     });
   }
 
@@ -478,17 +478,44 @@ export class ChatRestrictedService {
 
       this.PushMessageToLineService(data.userID, data.message);
 
-      // await this.prismaService.replyToken.delete({
-      //   where: {
-      //     id: replyToken.id,
-      //   },
-      // });
-
       await this.prismaService.logChat.create({
         data: {
           user: { connect: { id: client.users.id } },
           message: data.message,
           IP: client.handshake.address,
+        },
+      });
+      const chatData = await this.prismaService.chat.findUnique({
+        where: { cusID: data.userID },
+        select: { data: true },
+      });
+      const prevMessages = chatData?.data || [];
+      await this.prismaService.chat.upsert({
+        where: {
+          cusID: data.userID,
+        },
+        update: {
+          data: [
+            ...(Array.isArray(prevMessages) ? prevMessages : []),
+            {
+              text: data.message,
+              typeSender: 'admin',
+              type: 'text',
+              timestamp: new Date(),
+            },
+          ],
+        },
+        create: {
+          customer: { connect: { UserID: data.userID } },
+          data: [
+            {
+              text: data.message,
+              typeSender: 'self',
+              type: 'text',
+              timestamp: new Date(),
+            },
+          ],
+          monthAt: new Date(),
         },
       });
 
@@ -499,9 +526,10 @@ export class ChatRestrictedService {
         //   timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      throw new HTTPException({
-        message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
-      });
+      console.log(error);
+      // throw new HTTPException({
+      //   message: 'เกิดข้อผิดพลาดในการส่งข้อความ',
+      // });
     }
   }
 
@@ -681,5 +709,23 @@ export class ChatRestrictedService {
     };
 
     this.chatgateway.sendOrderToClient(customerID, this.createorder);
+  }
+  async GetChaatService() {
+    const chat = await this.prismaService.customer.findMany({
+      include: {
+        chat: {
+          select: {
+            id: true,
+            data: true,
+            monthAt: true,
+          },
+        },
+      },
+    });
+    return {
+      message: 'ดึงข้อมูลสำเร็จ',
+      data: chat,
+      timestamp: new Date().toISOString(),
+    };
   }
 }

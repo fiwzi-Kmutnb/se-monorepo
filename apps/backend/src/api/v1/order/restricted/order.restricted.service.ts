@@ -17,7 +17,7 @@ export class OrderRestrictedService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   private async PushMessageToLineService(userID: string, ...texts: string[]) {
     const messages = texts
@@ -103,6 +103,9 @@ export class OrderRestrictedService {
     const order = await this.prismaService.order.findMany({
       where: {
         status: status ? status : undefined,
+      },
+      include: {
+        Customer: true,
       },
     });
 
@@ -199,6 +202,9 @@ export class OrderRestrictedService {
         statusCode: 200,
         message: 'ยืนยัน Order สำเร็จ',
         type: 'SUCCESS',
+        data: {
+          token: Updatedata.deliveryToken,
+        },
         timestamp: new Date().toISOString(),
       };
     }

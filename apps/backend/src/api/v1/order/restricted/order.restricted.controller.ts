@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -21,7 +22,7 @@ import { RequirePermission } from 'src/decorators/permission.decorator';
 @UseGuards(AuthGuard)
 export class OrderRestrictedController {
   constructor(private readonly OrderService: OrderRestrictedService) {}
-  @Get('/vieworder')
+  @Post('/vieworder')
   @RequirePermission('orderEdit')
   async GetOrderController(@Body() status: ViewOrderDTO) {
     return this.OrderService.GetOrderService(status);

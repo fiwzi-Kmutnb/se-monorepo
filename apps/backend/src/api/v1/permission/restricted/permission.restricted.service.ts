@@ -37,7 +37,7 @@ export class PermissionRestrictedService {
   ): Promise<Response> {
     const { name, permissions } = data;
     const checkroles = await this.prismaService.role.findFirst({
-      where: { name: name },
+      where: { name: name, deletedAt: null },
     });
 
     if (checkroles) {
@@ -48,7 +48,7 @@ export class PermissionRestrictedService {
 
     const jsonData: Record<string, number> = datapermissions;
     const bitwire = permissions.reduce(
-      (acc, key) => acc + (jsonData[key] ?? 0),
+      (acc, key) => acc | (jsonData[key] ?? 0),
       0,
     );
 

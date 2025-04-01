@@ -43,26 +43,33 @@ const productcreateDTO = z.object(
   },
 );
 
-const productupdateDTO = z.object(
-  {
-    name: z.string({
-      message: 'กรุณากรอกชื่อสินค้า',
-    }),
-    info: z.string().optional(),
-    price: z.number({
-      message: 'กรุณากรอกราคา',
-    }),
-    quantity: z.number({
-      message: 'กรุณากรอกจำนวน',
-    }),
-    status: z.boolean({
-      message: 'กรุณากรอกสถานะ',
-    }),
-  },
-  {
-    message: 'กรุณากรอกข้อมูลให้ครบถ้วน',
-  },
-);
+// const productupdateDTO = z.object(
+//   {
+//     name: z.string({
+//       message: 'กรุณากรอกชื่อสินค้า',
+//     }),
+//     info: z.string().optional(),
+//     price: z
+//       .string({
+//         message: 'กรุณากรอกราคา',
+//       })
+//       .min(1, {
+//         message: 'กรุณากรอกราคา',
+//       })
+//       .refine((data) => !isNaN(Number(data)), {
+//         message: 'กรุณากรอกราคาให้ถูกต้อง',
+//       }),
+//     quantity: z.number({
+//       message: 'กรุณากรอกจำนวน',
+//     }),
+//     status: z.boolean({
+//       message: 'กรุณากรอกสถานะ',
+//     }),
+//   },
+//   {
+//     message: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+//   },
+// );
 
 const productparamsDTO = z
   .object(
@@ -80,5 +87,5 @@ const productparamsDTO = z
   });
 
 export class ProductCreateDTO extends createZodDto(productcreateDTO) {}
-export class ProductUpdateDTO extends createZodDto(productupdateDTO) {}
+export class ProductUpdateDTO extends createZodDto(productcreateDTO) {}
 export class ProductParamsDTO extends createZodDto(productparamsDTO) {}

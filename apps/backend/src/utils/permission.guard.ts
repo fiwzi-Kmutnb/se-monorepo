@@ -43,12 +43,11 @@ export class PermissionGuard implements CanActivate {
     });
 
     const userBitwisePermission = userperm.role.permission;
+    if (userBitwisePermission === -1) {
+      return true;
+    }
 
-    if (
-      (parseInt(String(userBitwisePermission), 2) &
-        parseInt(String(requiredPermissionValue), 2)) ===
-      0
-    ) {
+    if (!!(userBitwisePermission & requiredPermissionValue)) {
       throw new HTTPException({
         message: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
       });
