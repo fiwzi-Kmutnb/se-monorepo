@@ -92,6 +92,53 @@ export class DashboardAuthroizedService {
         }
       });
     });
+    const topcustomer = await this.prismaService.order.groupBy({
+      by: ['customer_Lineid'],
+      _sum: {
+        totalprice: true,
+      },
+      _count: {
+        id: true,
+      },
+      where: {
+        createdAt: {
+          gte: Today,
+          lte: now,
+        },
+      },
+      orderBy: {
+        _sum: {
+          totalprice: 'desc',
+        },
+      },
+      take: 5,
+    });
+
+    const res = await this.prismaService.order.findMany({
+      where: {
+        createdAt: {
+          gte: Today,
+          lte: now,
+        },
+      },
+      include: {
+        Customer: true,
+      },
+    });
+
+    const topcus = topcustomer.map((item) => {
+      const customer = res.find(
+        (c) => c.Customer.UserID === item.customer_Lineid,
+      );
+      return {
+        customer_name: customer ? customer.Customer.displayName : null,
+        customer_Img: customer.Customer.pictureUrl
+          ? customer.Customer.pictureUrl
+          : null,
+        totalprice: item._sum.totalprice,
+        totalorder: item._count.id,
+      };
+    });
 
     return {
       statusCode: 200,
@@ -128,6 +175,7 @@ export class DashboardAuthroizedService {
             quantity: item.quantity,
           };
         }),
+        topCustomertoday: topcus,
       },
       type: 'SUCCESS',
       timestamp: new Date().toISOString(),
