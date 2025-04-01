@@ -1,7 +1,28 @@
 import Layout from "@/components/layout";
+// import axios from "@/lib/axios";
 import Image from "next/image";
 
 const Order = () => {
+    // const [, setOrderAccept] = useState([]);
+    // const [, setOrderPending] = useState([]);
+    // const fetchAccept = () => {
+    //     axios.post("/v1/restricted/order/vieworder",{
+    //         "status": "ACCEPTED"
+    //     }).then((response) => {
+    //         setOrderAccept(response.data.data)
+    //     }).catch((e) => {
+
+    //     })
+    // }
+    // const fetchPadding = () => {
+    //     axios.post("/v1/restricted/order/vieworder",{
+    //         "status": "PENDING"
+    //     }).then((response) => {
+    //         setOrderPending(response.data.data)
+    //     }).catch((e) => {
+
+    //     })
+    // }
     return (
         <>
 

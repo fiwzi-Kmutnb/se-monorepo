@@ -51,8 +51,8 @@ const Layout = ({ children }) => {
             </Link>
           </li>
           <li>
-            <Link href="/panel/chat" className={
-              pathname === "/panel/chat" ? "active" : ""
+            <Link href="/panel/role" className={
+              pathname === "/panel/role" ? "active" : ""
             }>
               <div className="icon px-2">
                 <FaUserShield />
@@ -100,7 +100,7 @@ const Layout = ({ children }) => {
               <span className="links_name">BroadCast | ประกาศ</span>
             </Link>
           </li>
-          <li>
+          {/* <li>
             <Link href="/panel/setting" className={
               pathname === "/panel/setting" ? "active" : ""
             }>
@@ -109,7 +109,7 @@ const Layout = ({ children }) => {
               </div>
               <span className="links_name">Config | ข้อมูลเบื้องต้น</span>
             </Link>
-          </li>
+          </li> */}
           <li>
             <Link href="/panel/chat" className={
               pathname === "/panel/chat" ? "active" : ""

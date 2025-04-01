@@ -18,6 +18,17 @@ function Stock() {
     quantity: 1,
     status: true,
   })
+  const [imageEditpreview, setImageEditPreview] = useState(null);
+  const [imageEdit, setImageEdit] = useState(null);
+  const [currentProduct, setCurrentProduct] = useState(
+    {
+      name: "",
+      price: "",
+      info: "",
+      quantity: 1,
+      status: true,
+    }
+  );
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [addFile, setAddFile] = useState(null);
@@ -29,9 +40,47 @@ function Stock() {
         },
       })
       .then((res) => {
-        setProduct(res.data.data.data);
+        setProduct(res.data.data);
       });
   };
+  const updateProduct = async (e) => {
+    e.preventDefault();
+    if(!currentProduct.name)
+        return toast.error("กรุณากรอกชื่อสินค้า");
+    if(!currentProduct.price)
+        return toast.error("กรุณากรอกราคา");
+    if(!currentProduct.quantity)
+        return toast.error("กรุณากรอกจำนวนสินค้า");
+    if(!currentProduct.info)
+        return toast.error("กรุณากรอกรายละเอียดสินค้า");
+    const formData = new FormData();
+    formData.append("name", currentProduct.name);
+    formData.append("price", currentProduct.price);
+    formData.append("quantity", currentProduct.quantity);
+    formData.append("info", currentProduct.info);
+    formData.append("status", currentProduct.status);
+    if(imageEdit)
+      formData.append("files", imageEdit);
+    setLoading(true);
+    axios.patch(
+      `/v1/authroized/product/${currentProduct.id}`,
+        formData,
+      {
+        headers: {
+          Authorization: `Bearer ${getCookie("token")}`,
+            "Content-Type": "multipart/form-data",
+        },
+      }
+    ).then((e) => {
+        document.getElementById("edit").close();
+        toast.success("แก้ไขสินค้าเรียบร้อย");
+        fetchProduct();
+    }).catch((e) => {
+        toast.error(e.response.data.message);
+    }).finally(() => {
+        setLoading(false)
+    })
+  }
   const createProduct = async (e) => {
     e.preventDefault();
     if(!addFile)
@@ -44,8 +93,6 @@ function Stock() {
         return toast.error("กรุณากรอกจำนวนสินค้า");
     if(!addFormProduct.info)
         return toast.error("กรุณากรอกรายละเอียดสินค้า");
-    if(!addFormProduct.status)
-       return toast.error("กรุณาเลือกสถานะสินค้า");
     const formData = new FormData();
     formData.append("name", addFormProduct.name);
     formData.append("price", addFormProduct.price);
@@ -90,7 +137,8 @@ function Stock() {
     });
   }
   }
-const fileInput = useRef(null);
+  const fileInput = useRef(null);
+  const fileInputEdit = useRef(null);
   useEffect(() => {
     fetchProduct();
   }, []);
@@ -214,8 +262,106 @@ const fileInput = useRef(null);
               ✕
             </button>
           </form>
-          <h3 class="text-lg font-bold">Hello!</h3>
-          <p class="py-4">Press ESC key or click on ✕ button to close</p>
+          <div className="flex flex-col items-center">
+            <input type="file" hidden 
+            accept="image/*"
+                ref={fileInputEdit}
+            onChange={(e) => {
+                setImageEdit(e.target.files[0]);
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setImageEditPreview(reader.result);
+                };
+                if (file) {
+                  reader.readAsDataURL(file);
+                } else {
+                  setImageEditPreview(null);
+                }
+            }}
+            />
+            <button className={`w-32 h-32 bg-gray-300 rounded-lg flex items-center justify-center ${imageEditpreview ? "bg-cover bg-center" : "bg-cover bg-center"}`}
+             style={imageEditpreview ? { backgroundImage: `url(${imageEditpreview})` } : {backgroundImage: `url(${process.env.NEXT_PUBLIC_API_IMAGE + "/product/" + currentProduct.img_product})` }}
+             onClick={() => fileInputEdit.current.click()}  
+             >
+                <MdAttachFile/>
+            </button>
+          </div>
+
+          <form 
+            onSubmit={updateProduct}
+          >
+          <div className="mt-4">
+            <label className="block text-sm font-semibold">ชื่อสินค้า:</label>
+            <input
+                defaultValue={currentProduct.name}
+                onChange={(e) => setCurrentProduct({...currentProduct, name: e.target.value})}
+              type="text"
+              placeholder="กรอกชื่อวัตถุดิบ"
+              className="input input-bordered w-full"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <div>
+              <label className="block text-sm font-semibold">ราคา:</label>
+              <input
+                defaultValue={currentProduct.price}
+                min={1}
+                onChange={(e) => setCurrentProduct({...currentProduct, price: e.target.value})}
+                type="number"
+                className="input input-bordered w-full"
+                placeholder="00.00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold">จำนวน:</label>
+              <input
+                defaultValue={currentProduct.quantity}
+                min={1}
+                onChange={(e) => setCurrentProduct({...currentProduct, quantity: e.target.value})}
+                type="number"
+                className="input input-bordered w-full"
+                placeholder="00.00"
+              />
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <label className="block text-sm font-semibold">
+              รายละเอียดสินค้า:
+            </label>
+            <textarea
+                defaultValue={currentProduct.info}
+                onChange={(e) => setCurrentProduct({...currentProduct, info: e.target.value})}
+              className="textarea textarea-bordered w-full"
+              placeholder="กรอกรายละเอียด"
+            ></textarea>
+          </div>
+          <label className="form-control w-full ">
+            <div className="label">
+              <label className="block text-sm font-semibold">สถานะ:</label>
+            </div>
+            <div className="form-control w-52">
+              <label className="label cursor-pointer">
+                <span className="label-text">เปิดการใช้งาน</span>
+                <input  
+                  defaultChecked={currentProduct.status}
+                    onChange={(e) => setCurrentProduct({...currentProduct, status: e.target.checked})}
+                  type="checkbox"
+                  className="toggle toggle-accent"
+                />
+              </label>
+            </div>
+          </label>
+          <div className="flex justify-end mt-4">
+            <button disabled={loading} type="submit" className="btn bg-gray-800 text-white px-4 py-2 rounded-lg">
+            {loading ? (
+                <span class="loading loading-spinner loading-md"></span>
+            ): ("บันทึกข้อมูล")}
+            </button>
+          </div>
+          </form>
         </div>
       </dialog>
       <div className="grid grid-cols-12 ">
@@ -237,7 +383,7 @@ const fileInput = useRef(null);
             </button>
           </div>
 
-          <div className="mx-auto  p-5 bg-white shadow-lg min-h-[70vh] rounded-3xl mt-[20px]">
+          <div className="mx-auto  p-5 bg-white shadow-lg rounded-3xl mt-[20px]">
             <div className="overflow-x-auto">
               <table className="table w-full">
                 <thead>
@@ -253,6 +399,13 @@ const fileInput = useRef(null);
                   </tr>
                 </thead>
                 <tbody>
+                  {product?.length === 0 && (
+                    <tr className="hover:bg-gray-100">
+                      <td colSpan={8} className="text-center text-gray-500">
+                        ไม่มีข้อมูลสินค้า
+                      </td>
+                    </tr>
+                  )}
                   {product?.map((item, index) => (
                     <tr key={item.id} className="hover:bg-gray-100">
                       <td>{index + 1}</td>
@@ -265,7 +418,12 @@ const fileInput = useRef(null);
                         />
                       </td>
                       <td className="max-w-xs truncate">{item.info}</td>
-                      <td>{item.price}</td>
+                      <td>{Number(item.price).toLocaleString(
+                        "th-TH", {
+                          style: "currency",
+                          currency: "THB",
+                        }
+                      )}</td>
                       <td>{item.quantity} ชิ้น</td>
                       <td>
                         <span
@@ -281,8 +439,10 @@ const fileInput = useRef(null);
                       <td>
                         <button
                           className="btn btn-outline btn-sm rounded-3xl"
-                          onClick={() =>
+                          onClick={() => {
+                            setCurrentProduct(item)
                             document.getElementById("edit").showModal()
+                            }
                           }
                         >
                           แก้ไข
@@ -301,94 +461,6 @@ const fileInput = useRef(null);
           </div>
         </div>
       </div>
-      {/* 
-      {isModalOpen && (
-        <dialog
-          id="my_modal_3"
-          className="modal modal-bottom sm:modal-middle"
-          open
-        >
-          <div className="modal-box relative">
-            <form method="dialog">
-              <button
-                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                onClick={handleModalToggle}
-              >
-                ✕
-              </button>
-            </form>
-
-            <div className="flex flex-col items-center">
-              <div className="w-32 h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                <button className="bg-gray-800 text-white px-2 py-2 rounded-lg">
-                  อัปโหลดภาพ
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm font-semibold">Name</label>
-              <input
-                type="text"
-                placeholder="กรอกชื่อวัตถุดิบ"
-                className="input input-bordered w-full"
-                defaultValue={currentItem?.name || ""}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              <div>
-                <label className="block text-sm font-semibold">Price</label>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  placeholder="00.00"
-                  defaultValue={currentItem?.price || ""}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold">Amount</label>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  placeholder="00.00"
-                  defaultValue={currentItem?.stock || ""}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold">Discount</label>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  placeholder="00.00"
-                />
-              </div>
-            </div>
-
-            <div className="mt-2">
-              <label className="block text-sm font-semibold">
-                Discristions
-              </label>
-              <textarea
-                className="textarea textarea-bordered w-full"
-                placeholder="กรอกรายละเอียด"
-                defaultValue={currentItem?.description || ""}
-              ></textarea>
-            </div>
-
-            <div className="flex items-center space-x-2 mt-2">
-              <span className="text-sm font-semibold">Status :</span>
-              <span className="badge badge-success">พร้อม</span>
-              <span className="badge badge-error">ไม่พร้อม</span>
-            </div>
-            <div className="flex justify-end mt-4">
-              <button className="btn bg-gray-800 text-white px-4 py-2 rounded-lg">
-                บันทึกข้อมูล
-              </button>
-            </div>
-          </div>
-        </dialog>
-      )} */}
     </>
   );
 }

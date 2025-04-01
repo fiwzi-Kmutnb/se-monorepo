@@ -1,5 +1,5 @@
 import { ChatRestrictedService } from './chat.restricted.service';
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { Linemessage } from '../chat.entity';
 
 @Controller('v1/restricted/chat')
@@ -12,6 +12,15 @@ export class ChatRestrictedController {
     this.chatrestrictedservice.HookMessageService(body);
     return {
       message: 'success',
+    };
+  }
+
+  @Get('/')
+  async GetMessageController() {
+    const data = await this.chatrestrictedservice.GetChaatService();
+    return {
+      message: 'success',
+      data: data,
     };
   }
 }

@@ -17,8 +17,7 @@ export class WsGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const client: Socket = context.switchToWs().getClient<Socket>();
-    const token = client.handshake.headers.authorization?.split(' ')[1];
-
+    const token = client.handshake.auth.token?.split(' ')[1];
     if (!token) {
       throw new WSException({
         message: 'กรุณาทำการเข้าสู่ระบบ',

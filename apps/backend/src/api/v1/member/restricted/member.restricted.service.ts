@@ -123,6 +123,11 @@ export class MemberRestrictedService {
     const member = await this.prismaService.users.findUnique({
       where: {
         id: Number(param.id),
+        NOT: {
+          role: {
+            permission: -1,
+          },
+        },
       },
       include: {
         role: true,
@@ -131,7 +136,7 @@ export class MemberRestrictedService {
 
     if (!member) {
       throw new HTTPException({
-        message: `ไม่พบข้อมูล Member นี้`,
+        message: `ไม่พบข้อมูล Member นี้ หรือไม่สามารถแก้ไขได้`,
       });
     }
 

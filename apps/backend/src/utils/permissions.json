@@ -1,13 +1,13 @@
 {
   "memberRegister": 1,
-  "memberEditRoles": 10,
-  "rolesCreate": 100,
-  "rolesEdit": 1000,
-  "stockEdit": 10000,
-  "productEdit": 100000,
-  "historyOrder": 1000000,
-  "dashboardAnalysis": 10000000,
-  "lineChat": 100000000,
-  "broadCast": 1000000000,
-  "logSystem": 10000000000
+  "memberEditRoles": 2,
+  "rolesCreate": 4,
+  "rolesEdit": 8,
+  "stockEdit": 16,
+  "productEdit": 32,
+  "historyOrder": 64,
+  "dashboardAnalysis": 128,
+  "lineChat": 256,
+  "broadCast": 512,
+  "logSystem": 1024
 }

@@ -52,7 +52,10 @@ export class OrderGuestService {
       },
     });
     if (!order) {
-      throw new Error('เกิดข้อผิดพลาด');
+      throw new HTTPException({
+        message: 'ไม่พบ Order นี้',
+      });
+      // throw new Error('เกิดข้อผิดพลาด');
     }
     if (
       new Date().getTime() - order.deliveryToken[0].createdAt.getTime() >
