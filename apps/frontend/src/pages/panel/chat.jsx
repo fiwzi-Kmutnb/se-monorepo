@@ -68,6 +68,7 @@ const ChatApp = () => {
   };
   const newMSG = async (msg) => {
     const currentSelected = selectedChatRef.current;
+    getChats();
     if (currentSelected && currentSelected.UserID === msg.cusID) {
       setNewChat((prev) => [
         ...(Array.isArray(prev) ? prev : []),

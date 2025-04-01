@@ -5,7 +5,7 @@ import { HTTPException } from '@se/customfilter';
 
 @Injectable()
 export class DashboardAuthroizedService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async GetSalesAnalysisService() {
     const now = new Date();
@@ -175,7 +175,7 @@ export class DashboardAuthroizedService {
             quantity: item.quantity,
           };
         }),
-        topCustomertoday: topcus,
+        topcus,
       },
       type: 'SUCCESS',
       timestamp: new Date().toISOString(),
